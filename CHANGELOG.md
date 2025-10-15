@@ -7,6 +7,159 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Phase 5: User Story 3 - Terminate Unresponsive Process (T053-T066) ✅ COMPLETE
+
+#### Rust Backend - Process Termination
+- **ProcessManager Service**: Created `src-tauri/src/services/process_manager.rs` (180+ lines)
+  - `terminate_process()`: Core termination logic with comprehensive safety checks
+  - Critical process validation using `is_critical_process()` from utils/windows.rs
+  - Process existence verification before termination attempt
+  - Graceful error handling with specific error types (ProcessNotFound, PermissionDenied, CriticalProcessProtection)
+  - Post-termination verification to ensure process actually terminated
+  - Helper methods: `process_exists()`, `get_process_name()` for diagnostics
+- **kill_process Command**: Created `src-tauri/src/commands/process_ops.rs`
+  - Async Tauri command accepting PID parameter
+  - Uses managed ProcessManager state with Mutex for thread safety
+  - Returns Result<(), String> with detailed error messages
+  - Comprehensive unit tests for nonexistent processes and critical process protection
+- **Command Registration**: Updated `src-tauri/src/main.rs`
+  - Registered `kill_process` in invoke_handler
+  - Added managed state: `Mutex<ProcessManager>` for safe concurrent access
+  - Imported kill_process command function
+- **Error Handling**: Enhanced `src-tauri/src/error.rs`
+  - Added `ProcessNotFound(String)` for missing processes
+  - Added `PermissionDenied(String)` for UAC/privilege issues (FR-022)
+  - Added `ProcessTerminationFailed(String)` for kill signal failures
+  - Existing `CriticalProcessProtection(String)` for critical processes (FR-023)
+
+#### TypeScript Frontend - Termination Infrastructure
+- **Tauri Wrapper**: Added `invokeKillProcess(pid)` to `src/services/tauri.ts`
+  - Type-safe wrapper around kill_process command
+  - Preserves error messages from Rust for frontend handling
+  - Throws Error with original message for error classification
+- **ConfirmDialog Component**: Created `src/components/ConfirmDialog.ts` (220 lines)
+  - Three dialog types: 'standard', 'critical', 'uac-denied'
+  - Standard confirmation (FR-006): Shows process name, PID, data loss warning
+  - Critical process warning (FR-023): Strong warning with bullet points, default focus on Cancel
+  - UAC retry dialog (FR-022): Informative message with Retry/Cancel buttons
+  - Modal overlay with click-outside and ESC key handlers
+  - Auto-focus on Cancel button for safety (especially for critical processes)
+  - XSS protection with HTML escaping
+
+#### TypeScript Frontend - ProcessList Enhancement
+- **Context Menu**: Added right-click menu to `src/components/ProcessList.ts`
+  - Shows "End Process" option with icon (⛔)
+  - Positioned at mouse cursor location
+  - Auto-closes on outside click or action
+  - Attached to process table rows via data-pid attributes
+- **Termination Flow**: Full integration in ProcessList component (~190 new lines)
+  - `handleKillProcess()`: Initiates termination with standard confirmation dialog
+  - `attemptKillProcess()`: Calls invokeKillProcess and handles all error cases
+  - Error classification: Checks error message for specific error types
+  - ProcessNotFound: Shows transient toast notification, auto-refreshes list
+  - PermissionDenied: Shows UAC retry dialog (FR-022)
+  - CriticalProcessProtection: Shows critical warning dialog (FR-023)
+  - Success: Shows success toast, auto-refreshes process list
+- **Toast Notifications**: Transient messages for quick feedback
+  - Success (green): Process terminated successfully
+  - Error (red): Generic termination failures
+  - Info (blue): Process no longer exists
+  - Auto-dismiss after 3 seconds with slide animations
+  - Fixed position (bottom-right corner)
+- **Auto-Refresh**: Added process list update callback
+  - `setOnProcessListUpdate()`: Registers refresh callback
+  - Wired in `src/main.ts` to trigger process polling after termination
+  - Ensures UI reflects terminated process removal within 1-2 seconds
+
+#### UI/UX Enhancements
+- **Dialog Styling**: Added comprehensive CSS (~150 lines) to `src/style.css`
+  - `.dialog-overlay`: Full-screen semi-transparent backdrop (z-index 9999)
+  - `.dialog-content`: Centered modal with border-radius, box-shadow
+  - `.dialog-critical`: Red border (2px) for critical process warnings
+  - `.dialog-header`: Title section with color-coded headings
+  - `.dialog-body`: Content area with proper spacing and line-height
+  - `.dialog-warning`: Yellow-tinted warning box with border-left accent
+  - `.dialog-critical-list`: Bullet list for critical consequences
+  - `.dialog-info`: Blue-tinted info box for UAC messages
+  - `.dialog-footer`: Button container with flex layout and gap
+  - Button states: Hover, focus with box-shadows, transitions
+  - Animations: fadeIn (overlay), slideInDown (dialog content)
+- **Context Menu Styling**: Added CSS (~30 lines) to `src/style.css`
+  - `.context-menu`: Dropdown with border, shadow, border-radius
+  - `.context-menu-item`: Flex layout with icon and text
+  - Hover state with background color change
+  - fadeIn animation (0.1s) for smooth appearance
+- **Toast Animations**: Added keyframe animations to `src/style.css`
+  - `slideInUp`: Enters from bottom with opacity fade
+  - `slideOutDown`: Exits to bottom with opacity fade
+  - Used for transient success/error/info notifications
+
+#### Functional Requirements Implemented
+- ✅ **FR-006**: Confirmation dialog with data loss warning
+- ✅ **FR-022**: UAC denial retry dialog with informative message
+- ✅ **FR-023**: Critical process protection with strong warning, default focus on Cancel
+- ✅ **Process Termination**: Full flow from right-click to process removal
+- ✅ **Error Handling**: All error cases handled gracefully with appropriate UI feedback
+- ✅ **Auto-Refresh**: Process list updates after successful termination
+
+### Added - Phase 4: User Story 2 - Identify Resource-Heavy Processes (T040-T052) ✅ COMPLETE
+
+#### Rust Backend - Process Commands
+- **Process List Command**: `get_processes` command in `src-tauri/src/commands/processes.rs` - retrieves all running processes, returns Vec<ProcessInfo>
+- **Command Registration**: `get_processes` registered in `src-tauri/src/main.rs` invoke_handler
+- **Process Module**: Created `src-tauri/src/commands/processes.rs` with async command and tests
+- **Reused Service**: Leveraged existing `get_process_list()` from Phase 2's `system_monitor.rs` service
+
+#### TypeScript Frontend - Process Services
+- **Tauri Wrapper**: `invokeGetProcesses()` in `src/services/tauri.ts` with type-safe error handling
+- **Process Polling Service**: Extended `src/services/performance.ts` with ~150 lines:
+  - `getProcessList()`: Fetches with 100ms cache
+  - `startProcessPolling()`: 1.5-second polling interval (parallel to performance polling)
+  - `stopProcessPolling()`: Cleanup function
+  - `subscribeToProcessList()`: Subscriber pattern for updates
+  - `fetchProcessesAndNotify()`: Graceful error handling per FR-014
+- **Debounced Search**: 300ms debounce implementation per FR specifications
+
+#### TypeScript Frontend - ProcessList Component
+- **ProcessList Component**: `src/components/ProcessList.ts` (240 lines) with full state management
+  - **Table Rendering**: Generates HTML table with PID, Name, CPU%, Memory, Status columns
+  - **Sorting Logic**: `handleSort()` toggles asc/desc on any column, default CPU% descending
+  - **Filter Logic**: `applyFilterAndSort()` case-insensitive substring match on process name
+  - **Search Debounce**: `setSearchQuery()` with 300ms `window.setTimeout` per FR
+  - **Performance**: Limits to 500 processes (virtualization deferred to Phase 7+)
+  - **State Methods**: `showLoading()`, `showError()`, `updateProcesses()` for smooth updates
+
+#### Application Integration
+- **Main Entry Point**: `src/main.ts` updated with ProcessList integration
+  - Initialized ProcessListComponent with DOM element
+  - Started process polling on app startup
+  - Subscribed to process updates with callback
+  - Wired search input event listener with debounced filtering
+
+#### UI Enhancements
+- **Search Input**: Added to `index.html` in process-list section
+  - Section-header layout with h2 and input
+  - Input has id="process-search", class="search-input"
+  - Placeholder "Search processes..." and aria-label for accessibility
+
+#### Styling Additions
+- **Process List CSS**: Added ~90 lines to `src/style.css`:
+  - `.section-header`: Flex layout for h2 + search input
+  - `.search-input`: Styled input with focus effects (border-color, box-shadow)
+  - `.process-name`: Text overflow handling for long names
+  - `.status-*`: Color-coded status (running=green, sleeping=muted, stopped=warning)
+  - Sortable headers: Hover effects with bottom border accent
+  - Monospace fonts: Applied to PID, CPU%, Memory columns
+  - Sticky headers: `position: sticky` for table headers
+
+#### Functional Requirements Implemented
+- ✅ **FR-002**: Real-time updates (1.5s polling interval)
+- ✅ **FR-013**: Handle >100 processes (500 process limit)
+- ✅ **FR-014**: Graceful process disappearance handling
+- ✅ **Sorting**: All columns sortable with asc/desc toggle
+- ✅ **Filtering**: Case-insensitive search with 300ms debounce
+- ✅ **Performance**: Smooth updates with subscriber pattern
+
 ### Added - Phase 3: User Story 1 - Quick System Health Check (T024-T039) ✅ COMPLETE
 
 #### Rust Backend - Tauri Commands

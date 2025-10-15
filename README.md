@@ -1,6 +1,6 @@
 # Rust Task Manager 🦀⚡
 
-> A modern, high-performance Windows task manager built with **Rust** and **Tauri 2.x**, featuring real-time system monitoring and a beautiful, responsive UI.
+> CLARIFICATION: This project has been built entirely with the use of Copilot Agentic LLM, this includes code generation, completion, and suggestions throughout the development process. This was done for the sole purpose of research, performance, and experimentation into the capabilities of AI-assisted development with Github's SpecKit. Please refer to the [Copilot Instructions](.github/copilot-instructions.md) for more details.
 
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-2.x-blue.svg)](https://tauri.app/)

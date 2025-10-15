@@ -58,20 +58,22 @@ pub struct UserPreferences {
 }
 
 impl UserPreferences {
-  /// Load preferences from config file
+  /// Load preferences from config file (Phase 6 - User Story 6)
   ///
   /// # Errors
   /// Returns default preferences if file doesn't exist or cannot be read
+  #[allow(dead_code)]
   pub fn load() -> crate::error::Result<Self> {
     // TODO: Implement file loading in future phases
     // For now, return default preferences
     Ok(Self::default())
   }
 
-  /// Save preferences to config file
+  /// Save preferences to config file (Phase 6 - User Story 6)
   ///
   /// # Errors
   /// Returns `AppError::IoError` if file cannot be written
+  #[allow(dead_code)]
   pub fn save(&self) -> crate::error::Result<()> {
     // TODO: Implement file saving in future phases
     // For now, do nothing

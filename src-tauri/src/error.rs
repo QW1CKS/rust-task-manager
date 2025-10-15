@@ -13,14 +13,20 @@ pub enum AppError {
   #[error("Performance metrics collection failed: {0}")]
   PerformanceError(String),
 
-  #[error("Process not found: PID {0}")]
-  ProcessNotFound(u32),
+  #[error("Process not found: {0}")]
+  ProcessNotFound(String),
+
+  #[error("Permission denied: {0}")]
+  PermissionDenied(String),
 
   #[error("Access denied: {0}")]
   AccessDenied(String),
 
   #[error("Cannot terminate critical system process: {0}")]
   CriticalProcessProtection(String),
+
+  #[error("Process termination failed: {0}")]
+  ProcessTerminationFailed(String),
 
   #[error("Process termination failed: {0}")]
   TerminationFailed(String),

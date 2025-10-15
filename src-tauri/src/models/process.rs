@@ -109,7 +109,8 @@ impl ProcessInfo {
     }
   }
 
-  /// Check if this is a critical Windows system process
+  /// Check if this is a critical Windows system process (Phase 5+)
+  #[allow(dead_code)]
   pub fn is_critical(&self) -> bool {
     const CRITICAL: &[&str] = &[
       "csrss.exe",

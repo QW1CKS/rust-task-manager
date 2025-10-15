@@ -30,19 +30,21 @@ pub fn is_critical_process(process_name: &str) -> bool {
 /// Additional Windows-specific utility functions
 #[cfg(target_os = "windows")]
 pub mod windows_specific {
-  /// Check if the current process has administrator privileges
+  /// Check if current process is running with elevated privileges (Future phase)
   ///
   /// # Note
   /// This is a placeholder for future implementation using Windows API
+  #[allow(dead_code)]
   pub fn is_elevated() -> bool {
     // TODO: Implement using Windows API in future phases
     false
   }
 
-  /// Request administrator privileges via UAC
+  /// Request administrator privileges via UAC (Future phase)
   ///
   /// # Note
   /// This is a placeholder for future implementation
+  #[allow(dead_code)]
   pub fn request_elevation() -> crate::error::Result<()> {
     // TODO: Implement UAC elevation in future phases
     Err(crate::error::AppError::AccessDenied(

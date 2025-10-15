@@ -1,66 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rust Task Manager</title>
-  </head>
-  <body>
-    <div id="app">
-      <!-- Header -->
-      <header>
-        <h1>🦀 Rust Task Manager</h1>
-        <div id="theme-toggle">
-          <!-- Theme toggle button will be added in Phase 8 -->
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rust Task Manager</title>
+</head>
+
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <h1>🦀 Rust Task Manager</h1>
+      <div id="theme-toggle">
+        <!-- Theme toggle button will be added in Phase 8 -->
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- System Information Section -->
+      <section>
+        <h2>System Information</h2>
+        <div id="system-info">
+          <!-- System info items will be populated dynamically -->
+          <div class="info-item">
+            <span class="info-label">Loading...</span>
+            <span class="info-value">Please wait</span>
+          </div>
         </div>
-      </header>
+      </section>
 
-      <!-- Main Content -->
-      <main>
-        <!-- System Information Section -->
-        <section>
-          <h2>System Information</h2>
-          <div id="system-info">
-            <!-- System info items will be populated dynamically -->
-            <div class="info-item">
-              <span class="info-label">Loading...</span>
-              <span class="info-value">Please wait</span>
+      <!-- Performance Metrics Section -->
+      <section>
+        <h2>Performance</h2>
+        <div id="performance">
+          <!-- Performance metrics will be populated dynamically -->
+          <div class="metric">
+            <div class="metric-header">
+              <span class="metric-label">CPU Usage</span>
+              <span class="metric-value">--</span>
             </div>
           </div>
-        </section>
-
-        <!-- Performance Metrics Section -->
-        <section>
-          <h2>Performance</h2>
-          <div id="performance">
-            <!-- Performance metrics will be populated dynamically -->
-            <div class="metric">
-              <div class="metric-header">
-                <span class="metric-label">CPU Usage</span>
-                <span class="metric-value">--</span>
-              </div>
-            </div>
-            <div class="metric">
-              <div class="metric-header">
-                <span class="metric-label">Memory Usage</span>
-                <span class="metric-value">--</span>
-              </div>
+          <div class="metric">
+            <div class="metric-header">
+              <span class="metric-label">Memory Usage</span>
+              <span class="metric-value">--</span>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- Process List Section -->
-        <section id="process-list-section">
+      <!-- Process List Section -->
+      <section id="process-list-section">
+        <div class="section-header">
           <h2>Processes</h2>
-          <div id="process-list">
-            <!-- Process table will be populated dynamically -->
-            <p class="text-muted">Loading processes...</p>
-          </div>
-        </section>
-      </main>
-    </div>
+          <input type="text" id="process-search" class="search-input" placeholder="Search processes..."
+            aria-label="Search processes" />
+        </div>
+        <div id="process-list">
+          <!-- Process table will be populated dynamically -->
+          <p class="text-muted">Loading processes...</p>
+        </div>
+      </section>
+    </main>
+  </div>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>

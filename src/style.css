@@ -357,3 +357,348 @@ section h2 {
     font-size: 1.25rem;
   }
 }
+
+/* ========================================
+   Process List Section (User Story 2)
+   ======================================== */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+.search-input {
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  width: 250px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.process-name {
+  font-weight: 500;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.process-table th {
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-tertiary);
+  z-index: 10;
+}
+
+.status-running {
+  color: var(--success);
+  text-transform: capitalize;
+}
+
+.status-sleeping {
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.status-stopped {
+  color: var(--warning);
+  text-transform: capitalize;
+}
+
+.status-other {
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+/* Sortable table headers */
+.process-table th {
+  user-select: none;
+  position: relative;
+}
+
+.process-table th:hover::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--accent);
+}
+
+/* Process table monospace for numbers */
+.process-table td:nth-child(1),
+.process-table td:nth-child(3),
+.process-table td:nth-child(4) {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+
+/* ========================================
+   Confirmation Dialogs (User Story 3)
+   ======================================== */
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.dialog-content {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 400px;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  animation: slideInDown 0.2s ease-out;
+}
+
+.dialog-critical {
+  border-color: var(--error);
+  border-width: 2px;
+}
+
+.dialog-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dialog-critical .dialog-header h3 {
+  color: var(--error);
+}
+
+.dialog-body {
+  padding: 1.5rem;
+  color: var(--text-primary);
+}
+
+.dialog-body p {
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.dialog-body p:last-child {
+  margin-bottom: 0;
+}
+
+.dialog-warning {
+  padding: 0.75rem;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid var(--warning);
+  margin-top: 1rem;
+  border-radius: 4px;
+}
+
+.dialog-critical-warning {
+  color: var(--error);
+  font-size: 1.05rem;
+}
+
+.dialog-critical-message {
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+.dialog-critical-list {
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  color: var(--text-secondary);
+}
+
+.dialog-critical-list li {
+  margin: 0.25rem 0;
+}
+
+.dialog-critical-question {
+  margin-top: 1rem;
+  font-weight: 600;
+  color: var(--error);
+}
+
+.dialog-info {
+  padding: 0.75rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.dialog-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.dialog-cancel-button,
+.dialog-confirm-button {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dialog-cancel-button {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.dialog-cancel-button:hover {
+  background-color: var(--bg-secondary);
+}
+
+.dialog-cancel-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.2);
+}
+
+.dialog-confirm-button {
+  background-color: var(--accent);
+  color: white;
+}
+
+.dialog-confirm-button:hover {
+  background-color: #2563eb;
+}
+
+.dialog-confirm-danger {
+  background-color: var(--error);
+}
+
+.dialog-confirm-danger:hover {
+  background-color: #dc2626;
+}
+
+.dialog-confirm-critical {
+  background-color: var(--error);
+}
+
+.dialog-confirm-critical:hover {
+  background-color: #dc2626;
+}
+
+.dialog-confirm-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+/* ========================================
+   Context Menu (User Story 3)
+   ======================================== */
+
+.context-menu {
+  position: absolute;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  padding: 0.25rem 0;
+  z-index: 9998;
+  animation: fadeIn 0.1s ease-out;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.context-menu-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.context-menu-icon {
+  font-size: 1rem;
+}
+
+/* ========================================
+   Toast Notifications (User Story 3)
+   ======================================== */
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+

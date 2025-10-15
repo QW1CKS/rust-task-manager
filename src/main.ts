@@ -11,12 +11,19 @@
 import './style.css';
 import { SystemInfoComponent } from './components/SystemInfo';
 import { PerformanceMetricsComponent } from './components/PerformanceMetrics';
+import { ProcessListComponent } from './components/ProcessList';
 import { invokeGetSystemInfo } from './services/tauri';
-import { startPerformancePolling, subscribeToPerformance } from './services/performance';
+import {
+    startPerformancePolling,
+    subscribeToPerformance,
+    startProcessPolling,
+    subscribeToProcessList,
+} from './services/performance';
 
 // Initialize components
 const systemInfoComponent = new SystemInfoComponent('system-info');
 const performanceComponent = new PerformanceMetricsComponent('performance');
+const processListComponent = new ProcessListComponent('process-list');
 
 /**
  * Application initialization
@@ -30,19 +37,18 @@ async function initializeApp(): Promise<void> {
 
     try {
         // Fetch static system information (called once at startup)
-    
+
         const systemInfo = await invokeGetSystemInfo();
         systemInfoComponent.render(systemInfo);
-    
+
 
     } catch (error) {
-    
+
         console.error('[App] Failed to load system info:', error);
         systemInfoComponent.showError(error instanceof Error ? error : String(error));
     }
 
     // Start performance polling and subscribe to updates
-
     startPerformancePolling();
 
     subscribeToPerformance((metrics, error) => {
@@ -55,7 +61,34 @@ async function initializeApp(): Promise<void> {
         }
     });
 
+    // Start process list polling and subscribe to updates
+    processListComponent.showLoading();
+    startProcessPolling();
 
+    subscribeToProcessList((processes, error) => {
+        if (error) {
+            // Show error if process list fails
+            processListComponent.showError(error);
+        } else if (processes) {
+            // Update process list table
+            processListComponent.updateProcesses(processes);
+        }
+    });
+
+    // Set process list update callback (for manual refresh after termination)
+    processListComponent.setOnProcessListUpdate(() => {
+        // Manually trigger process list refresh
+        startProcessPolling();
+    });
+
+    // Wire up search box
+    const searchInput = document.getElementById('process-search') as HTMLInputElement;
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            processListComponent.setSearchQuery(target.value);
+        });
+    }
 }
 
 // Start application when DOM is ready
