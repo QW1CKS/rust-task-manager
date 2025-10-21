@@ -5,10 +5,14 @@ use windows::Win32::System::SystemInformation::{GetVersionExW, OSVERSIONINFOEXW}
 /// Cached Windows version information
 static mut WINDOWS_VERSION: Option<WindowsVersion> = None;
 
+/// Windows version information
 #[derive(Debug, Clone, Copy)]
 pub struct WindowsVersion {
+    /// Major version (e.g., 10 for Windows 10/11)
     pub major: u32,
+    /// Minor version
     pub minor: u32,
+    /// Build number (e.g., 22000+ for Windows 11)
     pub build: u32,
 }
 

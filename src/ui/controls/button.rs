@@ -12,14 +12,19 @@ use windows::core::Result;
 /// Button states for Fluent Design
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ButtonState {
+    /// Normal state (default)
     Normal,
+    /// Hover state (mouse over)
     Hover,
+    /// Pressed state (mouse down)
     Pressed,
+    /// Disabled state (not interactive)
     Disabled,
 }
 
 /// Button control with Fluent Design styling
 pub struct Button {
+    #[allow(dead_code)]
     text: String,
     state: ButtonState,
     enabled: bool,
@@ -28,6 +33,7 @@ pub struct Button {
 }
 
 impl Button {
+    /// Create a new button with the given text
     pub fn new(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),
@@ -38,6 +44,7 @@ impl Button {
         }
     }
 
+    /// Add a callback function that will be called when the button is clicked
     pub fn with_callback<F>(mut self, callback: F) -> Self
     where
         F: Fn() + 'static,
@@ -46,6 +53,7 @@ impl Button {
         self
     }
 
+    /// Enable or disable the button
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
         self.state = if enabled {

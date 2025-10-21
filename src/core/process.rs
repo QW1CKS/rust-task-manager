@@ -14,9 +14,11 @@ pub struct ProcessStore {
     count: usize,
 
     /// Process IDs (fixed capacity)
+    #[allow(dead_code)]
     pids: Box<[u32; MAX_PROCESSES]>,
 
     /// Process names (fixed capacity)
+    #[allow(dead_code)]
     names: Box<[String; MAX_PROCESSES]>,
     // Memory layout: 2048 processes × ~200 bytes/process = ~410KB for SoA storage
     // (well within <15MB idle budget per constitution)

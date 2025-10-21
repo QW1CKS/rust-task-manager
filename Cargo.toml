@@ -59,9 +59,6 @@ lto = "thin"
 codegen-units = 1
 strip = true
 
-[profile.bench]
-inherits = "release"
-
 [[bin]]
 name = "task-manager"
 path = "src/main.rs"

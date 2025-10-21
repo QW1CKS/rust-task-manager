@@ -89,12 +89,13 @@ pub fn get_fallback_background_color() -> windows::Win32::Graphics::Direct2D::Co
     }
 }
 
-// Feature flag support for disabling composition (debugging/perf testing)
+/// Check if composition is enabled (via feature flag)
 #[cfg(not(feature = "fluent-ui"))]
 pub fn is_composition_enabled() -> bool {
     false
 }
 
+/// Check if composition is enabled (via feature flag)
 #[cfg(feature = "fluent-ui")]
 pub fn is_composition_enabled() -> bool {
     true

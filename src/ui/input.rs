@@ -22,7 +22,7 @@ fn get_y_lparam(lp: LPARAM) -> i32 {
 }
 
 fn get_wheel_delta_wparam(wp: WPARAM) -> i16 {
-    ((wp.0 >> 16) as i16)
+    (wp.0 >> 16) as i16
 }
 
 /// Mouse button state
@@ -147,12 +147,8 @@ pub fn parse_char(wparam: WPARAM, lparam: LPARAM) -> Option<KeyboardEvent> {
     let char_code = wparam.0 as u32;
     let repeat_count = (lparam.0 & 0xFFFF) as u16;
     
-    // Convert to char (handles UTF-16 surrogates)
-    if let Some(character) = char::from_u32(char_code) {
-        Some(KeyboardEvent::Char { character, repeat_count })
-    } else {
-        None
-    }
+    // Convert to char (handles UTF-16 surrogates) - use map per clippy suggestion
+    char::from_u32(char_code).map(|character| KeyboardEvent::Char { character, repeat_count })
 }
 
 /// Hit testing result for UI elements

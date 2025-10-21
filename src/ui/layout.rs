@@ -7,17 +7,23 @@ use windows::Win32::UI::HiDpi::GetDpiForWindow;
 /// Layout rectangle with logical pixels
 #[derive(Debug, Clone, Copy)]
 pub struct Rect {
+    /// X coordinate (left)
     pub x: f32,
+    /// Y coordinate (top)
     pub y: f32,
+    /// Width
     pub width: f32,
+    /// Height
     pub height: f32,
 }
 
 impl Rect {
+    /// Create a new rectangle
     pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
         Self { x, y, width, height }
     }
 
+    /// Create from Direct2D rectangle
     pub fn from_d2d(rect: D2D_RECT_F) -> Self {
         Self {
             x: rect.left,
@@ -27,6 +33,7 @@ impl Rect {
         }
     }
 
+    /// Convert to Direct2D rectangle
     pub fn to_d2d(&self) -> D2D_RECT_F {
         D2D_RECT_F {
             left: self.x,
@@ -65,17 +72,23 @@ impl Rect {
 /// Layout constraints for sizing
 #[derive(Debug, Clone, Copy)]
 pub struct Constraints {
+    /// Minimum width
     pub min_width: f32,
+    /// Maximum width
     pub max_width: f32,
+    /// Minimum height
     pub min_height: f32,
+    /// Maximum height
     pub max_height: f32,
 }
 
 impl Constraints {
+    /// Create new constraints
     pub fn new(min_width: f32, max_width: f32, min_height: f32, max_height: f32) -> Self {
         Self { min_width, max_width, min_height, max_height }
     }
 
+    /// Create loose constraints (min = 0, max = given)
     pub fn loose(width: f32, height: f32) -> Self {
         Self {
             min_width: 0.0,
@@ -85,6 +98,7 @@ impl Constraints {
         }
     }
 
+    /// Create tight constraints (min = max = given)
     pub fn tight(width: f32, height: f32) -> Self {
         Self {
             min_width: width,
@@ -108,7 +122,9 @@ impl Constraints {
 /// Layout direction for flex layouts
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FlexDirection {
+    /// Horizontal layout (left to right)
     Horizontal,
+    /// Vertical layout (top to bottom)
     Vertical,
 }
 
@@ -120,6 +136,7 @@ pub struct FlexLayout {
 }
 
 impl FlexLayout {
+    /// Create a new flex layout with the given direction
     pub fn new(direction: FlexDirection) -> Self {
         Self {
             direction,
@@ -128,11 +145,13 @@ impl FlexLayout {
         }
     }
 
+    /// Set the gap between children
     pub fn with_gap(mut self, gap: f32) -> Self {
         self.gap = gap;
         self
     }
 
+    /// Set padding around the container
     pub fn with_padding(mut self, padding: f32) -> Self {
         self.padding = padding;
         self
@@ -219,6 +238,7 @@ pub struct LayoutCache {
 }
 
 impl LayoutCache {
+    /// Create a new empty layout cache
     pub fn new() -> Self {
         Self {
             cached_layout: None,

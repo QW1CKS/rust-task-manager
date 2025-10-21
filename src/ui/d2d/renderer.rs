@@ -13,15 +13,19 @@ use windows::Win32::Graphics::Dxgi::*;
 /// Direct2D renderer
 pub struct Renderer {
     // D2D Factory
+    #[allow(dead_code)]
     d2d_factory: ID2D1Factory1,
 
-    // D3D11 Device
+    // D3D Device
+    #[allow(dead_code)]
     d3d_device: ID3D11Device,
 
     // DXGI Device
+    #[allow(dead_code)]
     dxgi_device: IDXGIDevice,
 
     // D2D Device
+    #[allow(dead_code)]
     d2d_device: ID2D1Device,
 
     // D2D Device Context
@@ -33,7 +37,12 @@ pub struct Renderer {
     // DirectWrite Factory
     dwrite_factory: IDWriteFactory,
 
+    // Bitmap render target
+    #[allow(dead_code)]
+    bitmap: ID2D1Bitmap1,
+
     // Window handle
+    #[allow(dead_code)]
     hwnd: HWND,
 
     // Window dimensions
@@ -147,6 +156,7 @@ impl Renderer {
             device_context,
             swap_chain,
             dwrite_factory,
+            bitmap,
             hwnd,
             width,
             height,
