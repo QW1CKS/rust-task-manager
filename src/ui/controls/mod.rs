@@ -3,7 +3,10 @@
 pub mod button;
 pub mod context_menu;
 pub mod filter_box;
+pub mod graph;
+pub mod heatmap;
 pub mod table;
+pub mod time_range_selector;
 
 use crate::ui::input::{MouseEvent, KeyboardEvent};
 use crate::ui::layout::Rect;

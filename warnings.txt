@@ -1,0 +1,372 @@
+warning: unused variable: `brush`
+   --> src\ui\controls\graph.rs:178:13
+    |
+178 |         let brush = unsafe { context.CreateSolidColorBrush(&self.color, None)? };
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_brush`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `width`
+   --> src\ui\controls\graph.rs:188:13
+    |
+188 |         let width = bounds.right - bounds.left;
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_width`
+
+warning: unused variable: `height`
+   --> src\ui\controls\graph.rs:189:13
+    |
+189 |         let height = bounds.bottom - bounds.top;
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_height`
+
+warning: unused variable: `count`
+   --> src\ui\controls\graph.rs:190:13
+    |
+190 |         let count = self.buffer.len();
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_count`
+
+warning: unused variable: `width`
+   --> src\ui\panels\statistics.rs:167:13
+    |
+167 |         let width = sparkline_bounds.right - sparkline_bounds.left;
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_width`
+
+warning: unused variable: `height`
+   --> src\ui\panels\statistics.rs:168:13
+    |
+168 |         let height = sparkline_bounds.bottom - sparkline_bounds.top;
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_height`
+
+warning: field `name` is never read
+   --> src\ui\panels\performance.rs:194:5
+    |
+192 | pub struct StatisticsPanel {
+    |            --------------- field in this struct
+193 |     current: f32,
+194 |     name: String,
+    |     ^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: field `title` is never read
+  --> src\ui\panels\statistics.rs:93:5
+   |
+91 | pub struct StatisticsPanel {
+   |            --------------- field in this struct
+92 |     stats: MetricStatistics,
+93 |     title: String,
+   |     ^^^^^
+
+warning: missing documentation for a struct field
+  --> src\app\export.rs:44:5
+   |
+44 |     pub timestamp: u64,
+   |     ^^^^^^^^^^^^^^^^^^
+   |
+note: the lint level is defined here
+  --> src\lib.rs:12:9
+   |
+12 | #![warn(missing_docs)]
+   |         ^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+  --> src\app\export.rs:45:5
+   |
+45 |     pub metric_name: String,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+  --> src\app\export.rs:46:5
+   |
+46 |     pub value: f32,
+   |     ^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\app\export.rs:83:5
+   |
+83 |     pub fn clear(&mut self) {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\app\export.rs:87:5
+   |
+87 |     pub fn export_to_file(&self, path: impl AsRef<Path>) -> std::io::Result<()> {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+   --> src\app\export.rs:178:5
+    |
+178 |     pub path: String,
+    |     ^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+   --> src\app\export.rs:179:5
+    |
+179 |     pub format: ExportFormat,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\graph.rs:233:5
+    |
+233 |     pub fn add_series(&mut self, graph: LineGraph) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\graph.rs:237:5
+    |
+237 |     pub fn add_data_point(&mut self, series_index: usize, value: f32) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\graph.rs:243:5
+    |
+243 |     pub fn series_count(&self) -> usize {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\graph.rs:247:5
+    |
+247 |     pub fn set_legend_visible(&mut self, visible: bool) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\graph.rs:251:5
+    |
+251 |     pub fn toggle_series(&mut self, _series_index: usize) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\graph.rs:436:5
+    |
+436 |     pub fn show(&mut self, value: f32, timestamp: impl Into<String>, x: f32, y: f32) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\graph.rs:443:5
+    |
+443 |     pub fn hide(&mut self) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\controls\time_range_selector.rs:12:5
+   |
+12 |     OneMinute,
+   |     ^^^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\controls\time_range_selector.rs:13:5
+   |
+13 |     FiveMinutes,
+   |     ^^^^^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\controls\time_range_selector.rs:14:5
+   |
+14 |     OneHour,
+   |     ^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\controls\time_range_selector.rs:15:5
+   |
+15 |     TwentyFourHours,
+   |     ^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:19:5
+   |
+19 |     pub fn seconds(&self) -> u32 {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:28:5
+   |
+28 |     pub fn buffer_size(&self) -> usize {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:37:5
+   |
+37 |     pub fn name(&self) -> &'static str {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:46:5
+   |
+46 |     pub fn warning(&self) -> Option<&'static str> {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for an associated function
+  --> src\ui\controls\time_range_selector.rs:55:5
+   |
+55 |     pub fn all() -> &'static [HistoryLength] {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for an associated function
+  --> src\ui\controls\time_range_selector.rs:78:5
+   |
+78 |     pub fn new() -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:85:5
+   |
+85 |     pub fn selected(&self) -> HistoryLength {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:89:5
+   |
+89 |     pub fn set_selected(&mut self, length: HistoryLength) {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:94:5
+   |
+94 |     pub fn toggle_expanded(&mut self) {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\controls\time_range_selector.rs:98:5
+   |
+98 |     pub fn is_expanded(&self) -> bool {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\time_range_selector.rs:102:5
+    |
+102 |     pub fn handle_click(&mut self, x: f32, y: f32, bounds: &D2D_RECT_F) -> bool {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\controls\time_range_selector.rs:133:5
+    |
+133 |     pub unsafe fn render(&self, context: &ID2D1DeviceContext, bounds: &D2D_RECT_F) -> Result<()> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\panels\performance.rs:27:5
+   |
+27 |     Grid2x2,
+   |     ^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\panels\performance.rs:28:5
+   |
+28 |     Grid3x2,
+   |     ^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\panels\performance.rs:29:5
+   |
+29 |     Maximized,
+   |     ^^^^^^^^^
+
+warning: missing documentation for a struct field
+  --> src\ui\panels\statistics.rs:14:5
+   |
+14 |     pub current: f32,
+   |     ^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+  --> src\ui\panels\statistics.rs:15:5
+   |
+15 |     pub min: f32,
+   |     ^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+  --> src\ui\panels\statistics.rs:16:5
+   |
+16 |     pub max: f32,
+   |     ^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+  --> src\ui\panels\statistics.rs:17:5
+   |
+17 |     pub avg: f32,
+   |     ^^^^^^^^^^^^
+
+warning: missing documentation for a struct field
+  --> src\ui\panels\statistics.rs:18:5
+   |
+18 |     pub p95: f32,
+   |     ^^^^^^^^^^^^
+
+warning: missing documentation for an associated function
+  --> src\ui\panels\statistics.rs:22:5
+   |
+22 |     pub fn new() -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\panels\statistics.rs:32:5
+   |
+32 |     pub fn update(&mut self, value: f32) {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\panels\statistics.rs:38:5
+   |
+38 |     pub fn compute_from_values(&mut self, values: &[f32]) {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\panels\statistics.rs:65:5
+   |
+65 |     Good,
+   |     ^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\panels\statistics.rs:66:5
+   |
+66 |     Warning,
+   |     ^^^^^^^
+
+warning: missing documentation for a variant
+  --> src\ui\panels\statistics.rs:67:5
+   |
+67 |     Critical,
+   |     ^^^^^^^^
+
+warning: missing documentation for an associated function
+  --> src\ui\panels\statistics.rs:71:5
+   |
+71 |     pub fn from_percentage(value: f32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+  --> src\ui\panels\statistics.rs:81:5
+   |
+81 |     pub fn color(&self) -> D2D1_COLOR_F {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for an associated function
+  --> src\ui\panels\statistics.rs:99:5
+   |
+99 |     pub fn new(title: impl Into<String>) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\panels\statistics.rs:108:5
+    |
+108 |     pub fn update(&mut self, value: f32) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\panels\statistics.rs:121:5
+    |
+121 |     pub fn set_show_sparkline(&mut self, show: bool) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\panels\statistics.rs:125:5
+    |
+125 |     pub fn statistics(&self) -> &MetricStatistics {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a method
+   --> src\ui\panels\statistics.rs:129:5
+    |
+129 |     pub unsafe fn render(&self, context: &ID2D1DeviceContext, bounds: &D2D_RECT_F) -> Result<()> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `rust-task-manager` (lib) generated 59 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.21s

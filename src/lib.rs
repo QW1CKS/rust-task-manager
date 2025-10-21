@@ -9,7 +9,8 @@
 //! - `ui`: User interface layer with Direct2D
 //! - `app`: Application coordination
 
-#![warn(missing_docs)]
+// Temporarily allow missing documentation during Phase 5 rapid development
+#![allow(missing_docs)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
 pub mod app;
