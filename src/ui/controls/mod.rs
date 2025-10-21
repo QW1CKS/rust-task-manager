@@ -1,6 +1,9 @@
 //! UI controls module
 
 pub mod button;
+pub mod context_menu;
+pub mod filter_box;
+pub mod table;
 
 use crate::ui::input::{MouseEvent, KeyboardEvent};
 use crate::ui::layout::Rect;

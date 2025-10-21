@@ -10,7 +10,7 @@
 
 use windows::core::{Interface, Result as WinResult};
 use windows::Win32::Graphics::Dxgi::{
-    CreateDXGIFactory2, IDXGIAdapter3, IDXGIFactory4, DXGI_ADAPTER_DESC2,
+    CreateDXGIFactory2, IDXGIAdapter3, IDXGIFactory4,
     DXGI_QUERY_VIDEO_MEMORY_INFO, DXGI_CREATE_FACTORY_FLAGS,
     DXGI_MEMORY_SEGMENT_GROUP_LOCAL, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL,
 };
@@ -58,6 +58,7 @@ pub struct GpuMetrics {
 
 /// GPU monitoring collector
 pub struct GpuCollector {
+    #[allow(dead_code)]
     factory: IDXGIFactory4,
     adapters: Vec<IDXGIAdapter3>,
 }

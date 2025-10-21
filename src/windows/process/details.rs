@@ -11,7 +11,7 @@
 //! GetProcessHandleCount, GetGuiResources, GetTokenInformation
 
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
-use windows::Win32::Security::{GetTokenInformation, TokenIntegrityLevel, TokenUser, TOKEN_QUERY, TOKEN_USER};
+use windows::Win32::Security::{GetTokenInformation, TokenUser, TOKEN_QUERY, TOKEN_USER};
 use windows::Win32::System::Threading::{
     OpenProcess, OpenProcessToken, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT,
     PROCESS_QUERY_INFORMATION, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_VM_READ,
@@ -36,6 +36,7 @@ extern "system" {
 }
 
 #[repr(C)]
+#[allow(non_snake_case, non_camel_case_types)]
 struct PROCESS_MEMORY_COUNTERS_EX {
     cb: u32,
     PageFaultCount: u32,
@@ -51,9 +52,13 @@ struct PROCESS_MEMORY_COUNTERS_EX {
 }
 
 // Security integrity level RIDs (from WinNT.h)
+#[allow(dead_code)]
 const SECURITY_MANDATORY_LOW_RID: u32 = 0x00001000;
+#[allow(dead_code)]
 const SECURITY_MANDATORY_MEDIUM_RID: u32 = 0x00002000;
+#[allow(dead_code)]
 const SECURITY_MANDATORY_HIGH_RID: u32 = 0x00003000;
+#[allow(dead_code)]
 const SECURITY_MANDATORY_SYSTEM_RID: u32 = 0x00004000;
 
 // GDI/USER resource types (from WinUser.h)
@@ -68,14 +73,23 @@ extern "system" {
 /// Detailed process information
 #[derive(Debug, Clone)]
 pub struct ProcessDetails {
+    /// Process ID
     pub pid: u32,
+    /// Full executable path
     pub full_path: Option<String>,
+    /// Command line arguments
     pub command_line: Option<String>,
+    /// Detailed memory breakdown
     pub memory_details: MemoryDetails,
+    /// Number of handles
     pub handle_count: u32,
+    /// Number of GDI objects
     pub gdi_objects: u32,
+    /// Number of USER objects
     pub user_objects: u32,
+    /// Process integrity level
     pub integrity_level: IntegrityLevel,
+    /// Username/account information
     pub username: Option<String>,
 }
 
@@ -99,11 +113,17 @@ pub struct MemoryDetails {
 /// Process integrity level (security context)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum IntegrityLevel {
+    /// Untrusted integrity level
     Untrusted,
+    /// Low integrity level (sandboxed processes)
     Low,
+    /// Medium integrity level (normal user processes)
     Medium,
+    /// High integrity level (elevated/administrator)
     High,
+    /// System integrity level (system services)
     System,
+    /// Unknown or unrecognized integrity level
     Unknown,
 }
 

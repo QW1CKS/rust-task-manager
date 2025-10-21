@@ -20,6 +20,7 @@ windows = { version = "0.62", features = [
     "Win32_System_Memory",
     "Win32_Security",
     "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Shell",
     "Win32_UI_HiDpi",
     "Win32_Graphics_Gdi",
     "Win32_Graphics_Direct2D",
@@ -46,6 +47,7 @@ bumpalo = "3.14"
 # Utilities
 static_assertions = "1.1"
 num_cpus = "1.16"
+chrono = "0.4"
 
 [features]
 default = ["fluent-ui"]
