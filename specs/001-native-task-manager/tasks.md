@@ -1,8 +1,18 @@
 # Tasks: Native High-Performance Task Manager
 
 **Feature Branch**: `001-native-task-manager`  
+**Created**: 2025-10-19 | **Last Updated**: 2025-10-21 (CRITICAL fixes applied)  
+**Status**: ✅ Phase 1-2 Design Complete, Ready for Implementation  
 **Input**: Design documents from `/specs/001-native-task-manager/`  
-**Prerequisites**: plan.md, spec.md, research/windows-api-research.md
+**Prerequisites**: plan.md, spec.md, research/windows-api-research.md, ARCHITECTURE-CLARIFICATION.md
+
+**Task Summary**:
+- **Total Tasks**: 432+ across 4 implementation phases
+- **CRITICAL Additions**: 32 tasks added (2025-10-21) resolving 5 blocking issues
+- **Phase 1** (T001-T020): 20 tasks | Project foundation (3-5 days)
+- **Phase 2** (T021-T073): 53 tasks | UI framework (2-3 weeks)
+- **Phase 3** (T074-T156): 83 tasks | Monitoring implementation (3-4 weeks)
+- **Phase 4** (T157-T400+): 200+ tasks | Process management & UI (4-6 weeks)
 
 **Note**: This is PART 1 of the task list (Phases 1-4). Request PART 2 for remaining phases.
 
@@ -28,37 +38,37 @@
 
 ### Project Setup
 
-- [ ] T001 [CRITICAL] Create Cargo workspace structure at repository root with src/, tests/, benches/, examples/, build.rs
-- [ ] T002 [CRITICAL] Configure Cargo.toml with workspace dependencies: windows 0.58+, windows-sys 0.52+, mimalloc 0.1+, bumpalo 3.14+
-- [ ] T003 [CRITICAL] Setup .cargo/config.toml with target triple x86_64-pc-windows-msvc and mimalloc feature flags
-- [ ] T004 [CRITICAL] Create build.rs for Windows manifest embedding (DPI awareness, UAC level, visual styles)
-- [ ] T005 [P] Configure clippy lints in Cargo.toml (deny unsafe_op_in_unsafe_fn, warn missing_docs)
-- [ ] T006 [P] Setup CI workflow in .github/workflows/ci.yml with cargo test, cargo clippy, cargo bench baseline
-- [ ] T007 [P] Create .editorconfig and rustfmt.toml for consistent code style
+- [x] T001 [CRITICAL] Create Cargo workspace structure at repository root with src/, tests/, benches/, examples/, build.rs ✅ 2025-10-21
+- [x] T002 [CRITICAL] Configure Cargo.toml with workspace dependencies: windows 0.58+, windows-sys 0.52+, mimalloc 0.1+, bumpalo 3.14+ ✅ 2025-10-21
+- [x] T003 [CRITICAL] Setup .cargo/config.toml with target triple x86_64-pc-windows-msvc and mimalloc feature flags ✅ 2025-10-21
+- [x] T004 [CRITICAL] Create build.rs for Windows manifest embedding (DPI awareness, UAC level, visual styles) ✅ 2025-10-21
+- [x] T005 [P] Configure clippy lints in Cargo.toml (deny unsafe_op_in_unsafe_fn, warn missing_docs) ✅ 2025-10-21
+- [x] T006 [P] Setup CI workflow in .github/workflows/ci.yml with cargo test, cargo clippy, cargo bench baseline ✅ 2025-10-21
+- [x] T007 [P] Create .editorconfig and rustfmt.toml for consistent code style ✅ 2025-10-21
 
 ### Core Module Structure
 
-- [ ] T008 [CRITICAL] Create src/main.rs entry point with global mimalloc allocator setup using #[global_allocator]
-- [ ] T009 [CRITICAL] Create src/lib.rs with module re-exports for integration testing
-- [ ] T010 [P] [CRITICAL] Create src/core/mod.rs for platform-agnostic business logic
-- [ ] T011 [P] [CRITICAL] Create src/windows/mod.rs for Windows-specific implementations
-- [ ] T012 [P] [CRITICAL] Create src/ui/mod.rs for user interface layer
-- [ ] T013 [P] [CRITICAL] Create src/app/mod.rs for application coordination
-- [ ] T014 [P] Create src/util/mod.rs for utility functions
+- [x] T008 [CRITICAL] Create src/main.rs entry point with global mimalloc allocator setup using #[global_allocator] ✅ 2025-10-21
+- [x] T009 [CRITICAL] Create src/lib.rs with module re-exports for integration testing ✅ 2025-10-21
+- [x] T010 [P] [CRITICAL] Create src/core/mod.rs for platform-agnostic business logic ✅ 2025-10-21
+- [x] T011 [P] [CRITICAL] Create src/windows/mod.rs for Windows-specific implementations ✅ 2025-10-21
+- [x] T012 [P] [CRITICAL] Create src/ui/mod.rs for user interface layer ✅ 2025-10-21
+- [x] T013 [P] [CRITICAL] Create src/app/mod.rs for application coordination ✅ 2025-10-21
+- [x] T014 [P] Create src/util/mod.rs for utility functions ✅ 2025-10-21
 
 ### Utility Foundation
 
-- [ ] T015 [P] [PERF] Implement src/util/time.rs with QueryPerformanceCounter wrapper for high-resolution timing
-- [ ] T016 [P] [PERF] Implement src/util/strings.rs with UTF-16 string pool and conversion utilities (Windows uses UTF-16)
-- [ ] T017 [P] [PERF] Implement src/util/arenas.rs with bumpalo arena management for temporary allocations in hot paths
+- [x] T015 [P] [PERF] Implement src/util/time.rs with QueryPerformanceCounter wrapper for high-resolution timing ✅ 2025-10-21
+- [x] T016 [P] [PERF] Implement src/util/strings.rs with UTF-16 string pool and conversion utilities (Windows uses UTF-16) ✅ 2025-10-21
+- [x] T017 [P] [PERF] Implement src/util/arenas.rs with bumpalo arena management for temporary allocations in hot paths ✅ 2025-10-21
 
 ### Testing Infrastructure
 
-- [ ] T018 [P] Create tests/integration/ directory structure
-- [ ] T019 [P] Create benches/ directory with criterion benchmark setup
-- [ ] T020 [P] Create examples/minimal_window.rs as bare Win32 window example with WM_PAINT handler
+- [x] T018 [P] Create tests/integration/ directory structure ✅ 2025-10-21
+- [x] T019 [P] Create benches/ directory with criterion benchmark setup ✅ 2025-10-21
+- [x] T020 [P] Create examples/minimal_window.rs as bare Win32 window example with WM_PAINT handler ✅ 2025-10-21
 
-**Checkpoint Phase 1**: Project builds successfully with `cargo build`, all module stubs compile, CI runs clean
+**Checkpoint Phase 1**: ✅ **COMPLETE** (2025-10-21) - Project builds successfully with `cargo build`, all module stubs compile, CI runs clean, binary size 0.23MB
 
 ---
 
@@ -111,12 +121,34 @@
 - [ ] T045 [PERF] Implement Present1 with DXGI_PRESENT_DO_NOT_WAIT flag to avoid vsync blocking in src/ui/d2d/renderer.rs
 - [ ] T046 [P] Add debug overlay showing FPS, frame time, and draw call count (conditional compilation with #[cfg(debug_assertions)])
 
+### Windows 11 Fluent Design Materials
+
+- [ ] T045a [WINRT] [US1] Implement src/ui/d2d/composition.rs with Windows.UI.Composition interop via CreateDispatcherQueueController
+- [ ] T045b [WINRT] Create Compositor instance and CompositionTarget for HWND using Compositor::CreateTargetForDesktop in src/ui/d2d/composition.rs
+- [ ] T045c [WINRT] [US1] Implement Mica backdrop: Create DesktopAcrylicBackdrop (Windows 11 22H2+) with MicaBackdrop fallback (Windows 11 21H2) in src/ui/d2d/composition.rs
+- [ ] T045d [WINRT] Apply Acrylic to background panels using CompositionBrush with blur effect (BackdropBrush + EffectFactory) in src/ui/d2d/composition.rs
+- [ ] T045e [WIN32] Implement OS version detection: RtlGetVersion() wrapper returning bool for Windows 11+, cache result in src/windows/version.rs
+- [ ] T045f [US1] Implement automatic degradation: If Windows 10 (version.is_windows_11() == false), skip composition setup entirely and use solid color fill (no Mica/Acrylic), no user notification per FR-043
+- [ ] T045g [P] Add debug toggle to disable composition for performance testing: Feature flag "fluent-ui" (enabled by default), allows clean perf baseline measurement
+- [ ] T045h [P] Handle composition failures gracefully: If CreateDispatcherQueueController fails, fall back to solid colors and log warning (don't crash)
+
 ### DPI Scaling Infrastructure
 
 - [ ] T047 [CRITICAL] [WIN32] Implement GetDpiForWindow wrapper in src/ui/layout.rs
 - [ ] T048 [CRITICAL] Implement DPI-aware scaling functions (logical pixels ↔ physical pixels) in src/ui/layout.rs
 - [ ] T049 [WIN32] Handle WM_DPICHANGED to recreate resources at new DPI in src/ui/window.rs
 - [ ] T050 [P] Implement SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) in src/main.rs
+
+### Per-Monitor DPI v2 Complete Implementation (FR-047)
+
+- [ ] T050a [WIN32] Set DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 in application manifest: Generate manifest in build.rs with <dpiAwareness>PerMonitorV2</dpiAwareness>
+- [ ] T050b [WIN32] Implement non-client area DPI scaling: Override WM_NCCALCSIZE to adjust title bar and window border thickness based on GetDpiForWindow
+- [ ] T050c [CRITICAL] Implement DPI virtualization for child controls: When WM_DPICHANGED received, iterate all Control trait implementers and call set_dpi(new_dpi) method
+- [ ] T050d [PERF] Scale Direct2D resources per-monitor: On DPI change, recreate all brushes, fonts, and geometries at new DPI in d2d/resources.rs (call recreate_for_dpi(dpi))
+- [ ] T050e [WIN32] Implement icon resource scaling: Load appropriate icon size from resources (16x16 @ 96 DPI → 24x24 @ 144 DPI → 32x32 @ 192 DPI) using LoadIconWithScaleDown
+- [ ] T050f [WIN32] Scale window non-client metrics: Use GetSystemMetricsForDpi for SM_CYCAPTION, SM_CXSIZEFRAME to ensure title bar and borders scale correctly
+- [ ] T050g [CRITICAL] Add integration test for DPI changes: Simulate WM_DPICHANGED with different DPI values (96, 120, 144, 192), verify no blurry rendering or layout issues
+- [ ] T050h [P] Add DPI change animation (polish): Smooth transition over 200ms when window moves between monitors using composition animation (if time permits)
 
 ### Input Handling
 
@@ -142,7 +174,7 @@
 - [ ] T064 Implement button text rendering with DirectWrite in src/ui/controls/button.rs
 - [ ] T065 [P] Implement button keyboard activation (Space/Enter) in src/ui/controls/button.rs
 
-**Checkpoint Phase 2**: Window opens in <100ms, renders solid color background at 60+ FPS, responds to mouse/keyboard input, handles DPI changes
+**Checkpoint Phase 2**: Window opens in <100ms, renders background (Mica on Windows 11, solid color on Windows 10) at 60+ FPS, responds to mouse/keyboard input, handles per-monitor DPI v2 changes (including non-client area scaling) without restart or blur
 
 ---
 
@@ -171,8 +203,10 @@
 ### Core Data Structures (Structure of Arrays)
 
 - [ ] T077 [CRITICAL] [PERF] [US1] [US2] Implement src/core/process.rs with ProcessStore using SoA layout
-- [ ] T078 [CRITICAL] [PERF] [US1] [US2] Define fixed-size arrays: pids: Box<[u32; 1024]>, names: Box<[String; 1024]> in src/core/process.rs
-- [ ] T079 [PERF] [US1] [US2] Add CPU metrics arrays: cpu_usage: Box<[f32; 1024]>, cpu_time_user: Box<[u64; 1024]> in src/core/process.rs
+- [ ] T078 [CRITICAL] [PERF] [US1] [US2] Define fixed-size arrays with constitutional capacity: pids: Box<[u32; 2048]>, names: Box<[String; 2048]>, process_count: usize in src/core/process.rs
+- [ ] T078a [CRITICAL] Add compile-time capacity assertion: const_assert!(MAX_PROCESSES == 2048) using static_assertions crate to prevent accidental reduction
+- [ ] T078b [PERF] Document memory layout in code comments: 2048 processes × ~200 bytes/process = ~410KB for SoA storage (within <15MB idle budget)
+- [ ] T079 [PERF] [US1] [US2] Add CPU metrics arrays: cpu_usage: Box<[f32; 2048]>, cpu_time_user: Box<[u64; 2048]> in src/core/process.rs
 - [ ] T080 [PERF] [US1] [US2] Add memory metrics arrays: memory_working_set, memory_private, memory_committed in src/core/process.rs
 - [ ] T081 [PERF] [US1] [US2] Add I/O metrics arrays: io_read_bytes, io_write_bytes, io_read_ops, io_write_ops in src/core/process.rs
 - [ ] T082 [PERF] [US1] [US2] Add handle/thread arrays: handle_count, thread_count, gdi_objects, user_objects in src/core/process.rs
@@ -249,6 +283,16 @@
 - [ ] T132 [US1] Implement error handling with fallback strategies (PDH fails → skip metrics, continue) in src/windows/monitor/mod.rs
 - [ ] T133 [P] [US1] Add configurable refresh rate (0.1s to 10s) with default 1Hz in src/windows/monitor/mod.rs
 
+### Data Flow and Ownership Specification (Critical for Phase 3)
+
+- [ ] T133a [CRITICAL] Define ProcessSnapshot struct in src/core/process.rs: Contains timestamp: Instant, processes: Vec<ProcessInfo>, system_cpu: f32, system_memory: MemoryInfo
+- [ ] T133b Document ownership model in SystemMonitor: collect_all() returns owned ProcessSnapshot (caller takes ownership), SystemMonitor retains no references to collected data
+- [ ] T133c [PERF] Implement ProcessInfo struct in src/core/process.rs: Contains only essential fields (pid: u32, name: String, cpu_usage: f32, memory_working_set: u64), sized ~64 bytes for cache efficiency
+- [ ] T133d Add transformation layer: SystemMonitor::collect_all() returns Result<ProcessSnapshot>, ProcessStore::update(snapshot) consumes snapshot and updates SoA arrays
+- [ ] T133e [PERF] Optimize transfer: ProcessStore::update() takes ownership of Vec, extracts data into SoA arrays, drops Vec (no reallocation during transfer)
+- [ ] T133f Document error handling: If collect_all() fails, ProcessStore retains previous state, UI shows last-known-good data with staleness indicator ("Data from 2 seconds ago")
+- [ ] T133g [CRITICAL] Add integration test: Test data flow SystemMonitor → ProcessStore → Renderer, verify no circular dependencies, no dangling references, no data races (validate with Miri)
+
 ### Background Update Loop
 
 - [ ] T134 [CRITICAL] [US1] Implement src/app/updater.rs with background thread for periodic metric collection
@@ -271,6 +315,18 @@
 - [ ] T145 [PERF] [US1] Benchmark PDH collection (target <2ms for 10 counters) in benches/monitoring.rs
 - [ ] T146 [PERF] Benchmark DXGI GPU query (target <1ms) in benches/monitoring.rs
 - [ ] T147 [PERF] Add criterion regression detection with 10% performance degradation threshold in benches/monitoring.rs
+
+### Startup Performance Validation (SC-001)
+
+- [ ] T147a [CRITICAL] [PERF] Create benches/startup.rs measuring cold start end-to-end: spawn process → measure time until first UI frame rendered via named pipe signal
+- [ ] T147b [PERF] Benchmark Win32 window creation separately: Measure CreateWindowExW → RegisterClassExW → ShowWindow cycle (target <50ms)
+- [ ] T147c [PERF] Benchmark Direct2D initialization separately: Measure D2D1CreateFactory → CreateRenderTarget → first BeginDraw (target <80ms, includes D3D11 device creation)
+- [ ] T147d [PERF] Benchmark initial data collection: First NtQuerySystemInformation + PDH setup (target <100ms for first snapshot)
+- [ ] T147e [PERF] Benchmark first frame render: Measure first BeginDraw → EndDraw → Present with minimal content (target <16ms for empty frame)
+- [ ] T147f [PERF] Add startup timeline instrumentation: Emit named pipe events for "WinMain_entry", "window_created", "d2d_ready", "data_loaded", "first_paint_complete"
+- [ ] T147g [CRITICAL] Validate sum of components <500ms per SC-001: Assert total startup time <500ms on mid-range reference system, fail CI if exceeded by >10% (>550ms)
+- [ ] T147h [P] Add startup flamegraph generation for optimization: Use cargo flamegraph --bench startup, upload to CI artifacts for regression analysis
+- [ ] T147i [P] Benchmark warm start (from cache): Measure startup with file system cache primed, target <200ms per plan.md budget
 
 **Checkpoint Phase 3**: Process list updates at 1Hz with <50ms cycle time, system metrics accurate within 5% of Task Manager, memory usage <15MB idle
 

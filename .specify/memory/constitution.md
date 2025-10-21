@@ -230,7 +230,7 @@ rust-task-manager/
 │   ├── performance/   # CPU, memory, disk, network metrics
 │   ├── services/      # Windows services monitoring
 │   └── startup/       # Startup entries management
-├── windows-sys/       # Windows API wrappers and utilities
+├── windows/           # Windows API wrappers and utilities (uses windows-rs crate)
 ├── ui/                # UI framework and rendering
 │   ├── compositor/    # Direct2D/DirectComposition integration
 │   ├── controls/      # Custom UI controls
@@ -239,8 +239,10 @@ rust-task-manager/
 └── plugins/           # Plugin system (future extensibility)
 ```
 
+**Note**: Module name is `windows/` (directory). Dependency `windows-sys` (crate) used for low-level FFI where `windows` crate lacks APIs.
+
 #### Dependency Rules
-- **Core → Windows-sys**: Core depends only on Windows system wrappers
+- **Core → Windows**: Core depends only on Windows system wrappers
 - **UI → Core**: UI can depend on core, never the reverse
 - **App → All**: Application orchestrates all components
 - **No circular deps**: Enforced by `cargo-machete` and module structure

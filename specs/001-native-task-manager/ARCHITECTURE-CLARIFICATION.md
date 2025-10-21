@@ -1,8 +1,17 @@
 # Architecture Clarification - Data Flow & Threading Model
 
 **Generated**: 2025-10-21  
+**Status**: ✅ COMPLETE & VALIDATED  
 **Purpose**: Resolve architectural ambiguities identified in cross-artifact analysis  
-**Related Issues**: A1 (data ownership), A3 (UI sync), A4 (thread safety), F5 (threading model)
+**Related Issues**: A1 (data ownership), A3 (UI sync), A4 (thread safety), F5 (threading model)  
+**Referenced By**: plan.md (Phase 1 deliverable), tasks.md (T133a-g, threading tasks)
+
+**Resolution Summary**:
+- ✅ Data flow architecture: Unidirectional (Windows → Core → UI)
+- ✅ Ownership model: ProcessSnapshot transfer container, ProcessStore SoA arrays
+- ✅ Threading model: UI thread + Background thread with mpsc::sync_channel(2)
+- ✅ Synchronization: NO LOCKS REQUIRED (exclusive ownership)
+- ✅ Error propagation: 4-layer strategy defined
 
 ---
 
