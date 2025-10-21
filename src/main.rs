@@ -2,11 +2,20 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-fn main() {
-    // TODO: Initialize application
+use task_manager::ui::window::Window;
+
+fn main() -> windows::core::Result<()> {
     println!("Rust Task Manager v0.1.0");
     println!("Starting...");
 
-    // Placeholder for Phase 2 window creation
-    std::process::exit(0);
+    // Create main window
+    let window = Window::new("Rust Task Manager", 1200, 800)?;
+    window.show();
+
+    println!("Window created successfully");
+
+    // Run message loop
+    window.run_message_loop()?;
+
+    Ok(())
 }

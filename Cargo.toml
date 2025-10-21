@@ -10,17 +10,23 @@ repository = "https://github.com/yourusername/rust-task-manager"
 
 [dependencies]
 # Windows APIs
-windows = { version = "0.58", features = [
+windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_System_Threading",
     "Win32_System_ProcessStatus",
     "Win32_System_Performance",
     "Win32_System_SystemInformation",
+    "Win32_System_LibraryLoader",
     "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_HiDpi",
+    "Win32_Graphics_Gdi",
     "Win32_Graphics_Direct2D",
+    "Win32_Graphics_Direct2D_Common",
+    "Win32_Graphics_Direct3D",
     "Win32_Graphics_Direct3D11",
     "Win32_Graphics_DirectWrite",
     "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_System_Com",
     "UI_Composition",
@@ -36,6 +42,10 @@ bumpalo = "3.14"
 
 # Utilities
 static_assertions = "1.1"
+
+[features]
+default = ["fluent-ui"]
+fluent-ui = []  # Enable Fluent Design materials (Mica/Acrylic)
 
 [build-dependencies]
 embed-resource = "2.4"

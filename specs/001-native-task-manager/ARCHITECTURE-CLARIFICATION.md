@@ -823,8 +823,117 @@ If profiling shows channel is bottleneck (unlikely), consider lock-free alternat
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-10-21 | 1.0 | Initial architecture clarification | Analysis Tool |
+| 2025-10-22 | 1.1 | Added Phase 2 implementation notes (windows 0.62, Direct2D patterns) | Implementation |
 
 ---
 
-**Status**: ✅ Complete and Ready for Implementation  
-**Next Action**: Review with team, incorporate into plan.md Phase 3 checkpoint
+## 8. Phase 2 Implementation Notes (2025-10-22)
+
+### 8.1 Windows Crate Version Requirement
+
+**CRITICAL**: The `windows` crate **MUST be version 0.62 or higher** for Direct2D support.
+
+**Issue with windows 0.58**:
+- `CreateSolidColorBrush` method not accessible on `ID2D1DeviceContext` or `ID2D1RenderTarget`
+- `CreateBitmapFromDxgiSurface` had signature mismatches
+- Direct2D API bindings were incomplete/unstable
+
+**Resolution**: Upgrade to windows 0.62 immediately resolves all Direct2D API issues.
+
+**Migration Breaking Changes** (0.58 → 0.62):
+1. **D3D11CreateDevice**: Now requires explicit `HMODULE` parameter instead of `None`
+   ```rust
+   // 0.58: D3D11CreateDevice(None, ...)
+   // 0.62: D3D11CreateDevice(HMODULE::default(), ...)
+   ```
+
+2. **GetModuleHandleW**: Returns `HMODULE` instead of `Option<HINSTANCE>`
+   ```rust
+   // 0.58: let hinstance = GetModuleHandleW(None)?;
+   // 0.62: let hinstance = GetModuleHandleW(None).ok().map(|h| HINSTANCE(h.0));
+   ```
+
+3. **Error API**: `Error::from_win32()` removed, replaced with `Error::from_thread()`
+   ```rust
+   // 0.58: Err(Error::from_win32())
+   // 0.62: Err(Error::from_thread())
+   ```
+
+### 8.2 Direct2D Resource Creation Pattern
+
+**CreateSolidColorBrush** requires casting `ID2D1DeviceContext` to `ID2D1RenderTarget`:
+
+```rust
+// src/ui/d2d/resources.rs pattern
+let render_target: &ID2D1RenderTarget = unsafe { 
+    std::mem::transmute(device_context) 
+};
+
+let white_brush = unsafe {
+    render_target.CreateSolidColorBrush(
+        &D2D1_COLOR_F { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+        None,
+    )?
+};
+```
+
+**Rationale**: `ID2D1DeviceContext` inherits from `ID2D1RenderTarget`, but windows-rs 0.62 bindings don't expose all inherited methods directly. `std::mem::transmute` is safe here because the types have identical memory layout (COM inheritance).
+
+### 8.3 D3D11/DXGI Interop Pattern
+
+**Complete initialization sequence** for hardware-accelerated Direct2D:
+
+1. Create D2D1 factory (single-threaded for UI thread)
+2. Create D3D11 device with `D3D_DRIVER_TYPE_HARDWARE` and `D3D11_CREATE_DEVICE_BGRA_SUPPORT`
+3. Query `IDXGIDevice` from D3D11 device
+4. Create `ID2D1Device` from DXGI device
+5. Create `ID2D1DeviceContext` from D2D1 device
+6. Create `IDXGISwapChain1` for window HWND
+7. Get swap chain backbuffer as `IDXGISurface`
+8. Create `ID2D1Bitmap1` from DXGI surface with `D2D1_BITMAP_OPTIONS_TARGET | CANNOT_DRAW`
+9. Set bitmap as device context render target
+
+**Critical flags**:
+- D3D11: `D3D11_CREATE_DEVICE_BGRA_SUPPORT` (required for D2D interop)
+- D2D1 Bitmap: `D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW` (swap chain target)
+- Swap chain: `DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL` (flip model for modern Windows)
+
+### 8.4 Implementation Files
+
+**Phase 2 M1 created 3 key files** (542 lines total):
+
+1. **src/ui/window.rs** (202 lines)
+   - Win32 window creation with `CreateWindowExW`
+   - Message loop with `GetMessageW/TranslateMessage/DispatchMessageW`
+   - Handlers: WM_PAINT, WM_SIZE, WM_DESTROY, WM_CLOSE, WM_DPICHANGED
+   - Status: ✅ Compiles, window runs successfully
+
+2. **src/ui/d2d/renderer.rs** (240 lines)
+   - D2D1 factory + D3D11 device creation
+   - DXGI swap chain setup
+   - ID2D1DeviceContext initialization
+   - Bitmap render target from backbuffer
+   - Status: ✅ Compiles with windows 0.62
+
+3. **src/ui/d2d/resources.rs** (100 lines)
+   - Brush pool (white/black/gray solid color brushes)
+   - DirectWrite factory + text formats
+   - Segoe UI 12pt default format
+   - Status: ✅ Compiles, CreateSolidColorBrush working
+
+**Build Validation** (2025-10-22):
+- ✅ `cargo build`: 0 errors, 2 dead_code warnings (expected)
+- ✅ `cargo clippy`: 0 errors, 2 dead_code warnings (expected)
+- ✅ `cargo build --release`: SUCCESS in 59.67s
+- ✅ `cargo check --lib`: SUCCESS
+
+**Next Implementation Steps**:
+- Implement actual rendering logic in `renderer.rs` `render()` method
+- Connect DirectWrite text rendering
+- Implement Fluent Design materials (Mica/Acrylic via Windows.UI.Composition)
+- Add input handling (mouse/keyboard events)
+
+---
+
+**Status**: ✅ Complete - Architecture specification + Phase 2 implementation notes  
+**Next Action**: Proceed with Phase 2 M2 (Fluent Design, input handling, layout system)
