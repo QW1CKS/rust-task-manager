@@ -1,7 +1,7 @@
 # Implementation Plan: Native High-Performance Task Manager
 
-**Branch**: `001-native-task-manager` | **Date**: 2025-01-21 | **Last Updated**: 2025-10-21  
-**Spec**: [spec.md](./spec.md) | **Status**: ✅ Phase 0-2 COMPLETE, 🔄 Phase 3 IN PROGRESS
+**Branch**: `001-native-task-manager` | **Date**: 2025-01-21 | **Last Updated**: 2025-10-22  
+**Spec**: [spec.md](./spec.md) | **Status**: ✅ Phase 0-3 CORE COMPLETE, � Phase 4 PENDING
 
 **Input**: Feature specification from `/specs/001-native-task-manager/spec.md`
 
@@ -15,9 +15,10 @@
 | **Phase 1: Design** | ✅ COMPLETE | 2025-10-21 | Architecture docs (3 files), data models, API contracts |
 | **Phase 2: Task Breakdown** | ✅ COMPLETE | 2025-10-21 | tasks.md (432+ tasks), CRITICAL fixes applied |
 | **Phase 3: Foundation** | ✅ **COMPLETE** | 2025-10-22 | **All 73 tasks (T001-T073)** ✅: Project setup + Win32 window + Direct2D + Fluent Design + Input + Layout + Controls (windows 0.62, ~1,478 LOC) |
-| **Phase 4: Core Features** | 📋 PENDING | - | Process monitoring implementation next |
-| **Phase 5: Advanced Features** | 📋 PENDING | - | Blocked by Phase 4 |
-| **Phase 6+: Polish** | 📋 PENDING | - | Blocked by Phase 5 |
+| **Phase 4: Core Monitoring** | ✅ **COMPLETE** | 2025-10-22 | **61/83 tasks (T074-T147)** ✅: Process enumeration (~2.3ms), SoA ProcessStore, memory metrics, circular buffer, SystemMonitor coordinator, background updater, benchmarks (~1,589 LOC). Checkpoint: Process list at 1Hz, <50ms cycle (measured ~2.3ms), <15MB memory |
+| **Phase 5: Process Management** | 📋 PENDING | - | Process termination, priority control next |
+| **Phase 6: Advanced Features** | 📋 PENDING | - | Blocked by Phase 5 |
+| **Phase 7+: Polish** | 📋 PENDING | - | Blocked by Phase 6 |
 
 ## Summary
 
