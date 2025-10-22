@@ -30,7 +30,14 @@ impl Window {
     /// * `title` - Window title
     /// * `width` - Initial width
     /// * `height` - Initial height
+    /// 
+    /// # Performance (T311)
+    /// Window creation is measured with QueryPerformanceCounter
+    /// Target: <100ms for window creation
     pub fn new(title: &str, width: i32, height: i32) -> Result<Self> {
+        use std::time::Instant;
+        let start = Instant::now();
+        
         // Register window class
         Self::register_window_class()?;
 
@@ -55,6 +62,11 @@ impl Window {
                 None,
             )?
         };
+        
+        let elapsed = start.elapsed();
+        if elapsed.as_millis() > 100 {
+            eprintln!("Warning: Window creation took {}ms (target <100ms)", elapsed.as_millis());
+        }
 
         Ok(Self {
             hwnd,
@@ -290,6 +302,88 @@ impl Window {
         // SAFETY: ShowWindow is safe with valid HWND
         unsafe {
             let _ = ShowWindow(self.hwnd, SW_SHOW);
+        }
+    }
+
+    /// Hide the window (T460 - minimize to tray)
+    pub fn hide(&self) {
+        unsafe {
+            let _ = ShowWindow(self.hwnd, SW_HIDE);
+        }
+    }
+
+    /// Minimize the window
+    pub fn minimize(&self) {
+        unsafe {
+            let _ = ShowWindow(self.hwnd, SW_MINIMIZE);
+        }
+    }
+
+    /// Maximize the window
+    pub fn maximize(&self) {
+        unsafe {
+            let _ = ShowWindow(self.hwnd, SW_MAXIMIZE);
+        }
+    }
+
+    /// Restore the window
+    pub fn restore(&self) {
+        unsafe {
+            let _ = ShowWindow(self.hwnd, SW_RESTORE);
+        }
+    }
+
+    /// Set always-on-top mode (T463)
+    pub fn set_always_on_top(&self, on_top: bool) -> Result<()> {
+        unsafe {
+            let insert_after = if on_top { 
+                HWND_TOPMOST 
+            } else { 
+                HWND_NOTOPMOST 
+            };
+            
+            SetWindowPos(
+                self.hwnd,
+                Some(insert_after),
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+            )
+        }
+    }
+
+    /// Check if window is visible
+    pub fn is_visible(&self) -> bool {
+        unsafe { IsWindowVisible(self.hwnd).as_bool() }
+    }
+
+    /// Check if window is minimized
+    pub fn is_minimized(&self) -> bool {
+        unsafe { IsIconic(self.hwnd).as_bool() }
+    }
+
+    /// Check if window is maximized
+    pub fn is_maximized(&self) -> bool {
+        unsafe { IsZoomed(self.hwnd).as_bool() }
+    }
+
+    /// Get window position and size (T467)
+    pub fn get_rect(&self) -> Result<(i32, i32, i32, i32)> {
+        unsafe {
+            let mut rect = windows::Win32::Foundation::RECT::default();
+            GetWindowRect(self.hwnd, &mut rect)?;
+            Ok((rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top))
+        }
+    }
+
+    /// Set window position and size (T467)
+    pub fn set_rect(&self, x: i32, y: i32, width: i32, height: i32) -> Result<()> {
+        unsafe {
+            SetWindowPos(
+                self.hwnd,
+                None,
+                x, y, width, height,
+                SWP_NOZORDER | SWP_NOACTIVATE,
+            )
         }
     }
 }

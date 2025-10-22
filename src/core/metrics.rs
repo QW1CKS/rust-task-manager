@@ -120,6 +120,11 @@ pub fn calculate_rate(current: u64, previous: u64, elapsed_ms: u64) -> u64 {
 }
 
 /// Metric aggregation functions
+/// 
+/// # Performance (T327)
+/// 
+/// Uses AVX2 SIMD instructions when available for min/max/sum operations.
+/// Falls back to scalar implementation if AVX2 not supported.
 pub struct MetricAggregation {
     values: Vec<f32>,
 }
@@ -131,20 +136,63 @@ impl MetricAggregation {
     }
 
     /// Calculate minimum value
+    /// 
+    /// # Performance (T327)
+    /// 
+    /// Uses AVX2 for vectorized min when len >= 8 and feature available
     pub fn min(&self) -> Option<f32> {
+        if self.values.is_empty() {
+            return None;
+        }
+        
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") && self.values.len() >= 8 {
+                return Some(unsafe { simd_min(&self.values) });
+            }
+        }
+        
         self.values.iter().copied().min_by(|a, b| a.partial_cmp(b).unwrap())
     }
 
     /// Calculate maximum value
+    /// 
+    /// # Performance (T327)
+    /// 
+    /// Uses AVX2 for vectorized max when len >= 8 and feature available
     pub fn max(&self) -> Option<f32> {
+        if self.values.is_empty() {
+            return None;
+        }
+        
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") && self.values.len() >= 8 {
+                return Some(unsafe { simd_max(&self.values) });
+            }
+        }
+        
         self.values.iter().copied().max_by(|a, b| a.partial_cmp(b).unwrap())
     }
 
     /// Calculate average value
+    /// 
+    /// # Performance (T327)
+    /// 
+    /// Uses AVX2 for vectorized sum when len >= 8 and feature available
     pub fn avg(&self) -> Option<f32> {
         if self.values.is_empty() {
             return None;
         }
+        
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") && self.values.len() >= 8 {
+                let sum = unsafe { simd_sum(&self.values) };
+                return Some(sum / self.values.len() as f32);
+            }
+        }
+        
         Some(self.values.iter().sum::<f32>() / self.values.len() as f32)
     }
 
@@ -159,6 +207,108 @@ impl MetricAggregation {
 
         let index = ((sorted.len() as f32) * 0.95) as usize;
         Some(sorted[index.min(sorted.len() - 1)])
+    }
+}
+
+/// SIMD-accelerated metric aggregation (T327)
+/// 
+/// Uses AVX2 instructions for 8x f32 parallel operations
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn simd_min(values: &[f32]) -> f32 {
+    use std::arch::x86_64::*;
+    
+    // SAFETY: Function has target_feature(avx2), so AVX2 intrinsics are safe
+    unsafe {
+        let mut min_vec = _mm256_set1_ps(f32::MAX);
+        let chunks = values.chunks_exact(8);
+        let remainder = chunks.remainder();
+        
+        for chunk in chunks {
+            let vec = _mm256_loadu_ps(chunk.as_ptr());
+            min_vec = _mm256_min_ps(min_vec, vec);
+        }
+        
+        // Horizontal min across 8 lanes
+        let mut result = [0.0f32; 8];
+        _mm256_storeu_ps(result.as_mut_ptr(), min_vec);
+        let mut min_val = result[0];
+        for &val in &result[1..] {
+            min_val = min_val.min(val);
+        }
+        
+        // Process remainder
+        for &val in remainder {
+            min_val = min_val.min(val);
+        }
+        
+        min_val
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn simd_max(values: &[f32]) -> f32 {
+    use std::arch::x86_64::*;
+    
+    // SAFETY: Function has target_feature(avx2), so AVX2 intrinsics are safe
+    unsafe {
+        let mut max_vec = _mm256_set1_ps(f32::MIN);
+        let chunks = values.chunks_exact(8);
+        let remainder = chunks.remainder();
+        
+        for chunk in chunks {
+            let vec = _mm256_loadu_ps(chunk.as_ptr());
+            max_vec = _mm256_max_ps(max_vec, vec);
+        }
+        
+        // Horizontal max across 8 lanes
+        let mut result = [0.0f32; 8];
+        _mm256_storeu_ps(result.as_mut_ptr(), max_vec);
+        let mut max_val = result[0];
+        for &val in &result[1..] {
+            max_val = max_val.max(val);
+        }
+        
+        // Process remainder
+        for &val in remainder {
+            max_val = max_val.max(val);
+        }
+        
+        max_val
+    }
+}
+
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn simd_sum(values: &[f32]) -> f32 {
+    use std::arch::x86_64::*;
+    
+    // SAFETY: Function has target_feature(avx2), so AVX2 intrinsics are safe
+    unsafe {
+        let mut sum_vec = _mm256_setzero_ps();
+        let chunks = values.chunks_exact(8);
+        let remainder = chunks.remainder();
+        
+        for chunk in chunks {
+            let vec = _mm256_loadu_ps(chunk.as_ptr());
+            sum_vec = _mm256_add_ps(sum_vec, vec);
+        }
+        
+        // Horizontal sum across 8 lanes
+        let mut result = [0.0f32; 8];
+        _mm256_storeu_ps(result.as_mut_ptr(), sum_vec);
+        let mut sum = 0.0f32;
+        for &val in &result {
+            sum += val;
+        }
+        
+        // Process remainder
+        for &val in remainder {
+            sum += val;
+        }
+        
+        sum
     }
 }
 

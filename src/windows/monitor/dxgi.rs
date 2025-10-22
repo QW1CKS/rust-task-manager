@@ -60,7 +60,9 @@ pub struct GpuMetrics {
 pub struct GpuCollector {
     #[allow(dead_code)]
     factory: IDXGIFactory4,
-    adapters: Vec<IDXGIAdapter3>,
+    pub adapters: Vec<GpuAdapter>,
+    pub memory_usage: Vec<GpuMemoryUsage>,
+    adapter_handles: Vec<IDXGIAdapter3>,
 }
 
 impl GpuCollector {
@@ -73,7 +75,7 @@ impl GpuCollector {
             let factory: IDXGIFactory4 = CreateDXGIFactory2(DXGI_CREATE_FACTORY_FLAGS(0))?;
             
             // Enumerate adapters
-            let mut adapters = Vec::new();
+            let mut adapter_handles = Vec::new();
             let mut index = 0u32;
             
             loop {
@@ -82,7 +84,7 @@ impl GpuCollector {
                         // Try to get IDXGIAdapter3 (required for QueryVideoMemoryInfo)
                         match adapter1.cast::<IDXGIAdapter3>() {
                             Ok(adapter3) => {
-                                adapters.push(adapter3);
+                                adapter_handles.push(adapter3);
                                 index += 1;
                             }
                             Err(_) => break, // Adapter doesn't support DXGI 1.4
@@ -92,17 +94,52 @@ impl GpuCollector {
                 }
             }
             
-            Ok(Self { factory, adapters })
+            let mut collector = Self {
+                factory,
+                adapters: Vec::new(),
+                memory_usage: Vec::new(),
+                adapter_handles,
+            };
+            
+            // Initialize adapter info
+            collector.adapters = collector.get_adapter_info()?;
+            collector.memory_usage = collector.collect_memory_usage()?;
+            
+            Ok(collector)
         }
+    }
+
+    /// Create an empty GPU collector (for fallback when GPU is unavailable)
+    pub fn new_empty() -> Self {
+        unsafe {
+            // Try to create a factory - if it fails, panic as GPU should be available
+            // Note: We cannot use zeroed() for COM objects as it's undefined behavior
+            #[allow(clippy::expect_fun_call)]
+            let factory: IDXGIFactory4 = CreateDXGIFactory2(DXGI_CREATE_FACTORY_FLAGS(0))
+                .expect("Failed to create DXGI factory - GPU monitoring unavailable");
+            
+            Self {
+                factory,
+                adapters: Vec::new(),
+                memory_usage: Vec::new(),
+                adapter_handles: Vec::new(),
+            }
+        }
+    }
+
+    /// Update GPU metrics (refreshes memory usage)
+    pub fn update(&mut self) -> WinResult<()> {
+        self.memory_usage = self.collect_memory_usage()?;
+        Ok(())
     }
     
     /// T113: Get adapter information
     ///
     /// Returns static information about all GPU adapters.
     pub fn get_adapter_info(&self) -> WinResult<Vec<GpuAdapter>> {
-        let mut result = Vec::with_capacity(self.adapters.len());
+        let mut result = Vec::with_capacity(self.adapter_handles.len());
         
-        for (index, adapter) in self.adapters.iter().enumerate() {
+        for (index, adapter) in self.adapter_handles.iter().enumerate() {
             unsafe {
                 let desc = adapter.GetDesc2()?;
                 
@@ -130,9 +167,9 @@ impl GpuCollector {
     ///
     /// Returns current memory usage for all GPU adapters.
     pub fn collect_memory_usage(&self) -> WinResult<Vec<GpuMemoryUsage>> {
-        let mut result = Vec::with_capacity(self.adapters.len());
+        let mut result = Vec::with_capacity(self.adapter_handles.len());
         
-        for adapter in &self.adapters {
+        for adapter in &self.adapter_handles {
             let memory = self.query_adapter_memory(adapter)?;
             result.push(memory);
         }
@@ -203,7 +240,7 @@ mod tests {
         let result = GpuCollector::new();
         
         if let Ok(collector) = result {
-            assert!(collector.adapters.len() > 0, "Should detect at least one GPU adapter");
+            assert!(collector.adapter_handles.len() > 0, "Should detect at least one GPU adapter");
         }
     }
     

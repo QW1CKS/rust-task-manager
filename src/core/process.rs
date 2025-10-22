@@ -46,7 +46,9 @@ pub struct ProcessStore {
     /// Parent process IDs
     parent_pids: Box<[u32; MAX_PROCESSES]>,
 
-    /// Process names (interned via string pool - T317)
+    /// Process names (interned via string pool - T317, T331)
+    /// Uses Arc<str> for copy-on-write semantics - common process names
+    /// (svchost.exe, chrome.exe, etc.) are shared, not duplicated
     names: Box<[Arc<str>; MAX_PROCESSES]>,
 
     /// Thread counts

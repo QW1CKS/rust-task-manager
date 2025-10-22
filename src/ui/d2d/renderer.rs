@@ -408,4 +408,28 @@ impl Renderer {
             self.device_context.PopLayer();
         }
     }
+    
+    /// T337: Check if rectangle is visible (occlusion culling)
+    /// Returns false if rect is completely outside the viewport
+    pub fn is_visible(&self, rect: &D2D_RECT_F) -> bool {
+        let viewport_width = self.width as f32;
+        let viewport_height = self.height as f32;
+        
+        // Check if rectangle intersects viewport
+        !(rect.right < 0.0 || 
+          rect.left > viewport_width || 
+          rect.bottom < 0.0 || 
+          rect.top > viewport_height)
+    }
+    
+    /// T337: Check if element is visible with scroll offset
+    pub fn is_visible_with_scroll(&self, rect: &D2D_RECT_F, scroll_x: f32, scroll_y: f32) -> bool {
+        let adjusted_rect = D2D_RECT_F {
+            left: rect.left - scroll_x,
+            top: rect.top - scroll_y,
+            right: rect.right - scroll_x,
+            bottom: rect.bottom - scroll_y,
+        };
+        self.is_visible(&adjusted_rect)
+    }
 }

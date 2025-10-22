@@ -146,6 +146,11 @@ impl Drop for PdhQuery {
 }
 
 /// System metrics collector using PDH
+/// 
+/// # Performance (T325)
+/// 
+/// Supports selective collection to reduce PDH overhead when metrics not visible.
+/// Only collects counters for visible graphs to minimize CPU usage.
 pub struct SystemMetricsCollector {
     query: PdhQuery,
     cpu_total_index: usize,
@@ -158,6 +163,11 @@ pub struct SystemMetricsCollector {
     network_recv_index: usize,
     network_send_index: usize,
     initialized: bool,
+    
+    // T325: Visibility flags to skip collection for hidden metrics
+    pub collect_cpu: bool,
+    pub collect_disk: bool,
+    pub collect_network: bool,
 }
 
 impl SystemMetricsCollector {
@@ -225,6 +235,10 @@ impl SystemMetricsCollector {
             network_recv_index,
             network_send_index,
             initialized: false,
+            // T325: Enable all by default
+            collect_cpu: true,
+            collect_disk: true,
+            collect_network: true,
         })
     }
     
@@ -233,6 +247,11 @@ impl SystemMetricsCollector {
     /// Must be called at least twice with a delay between calls.
     /// The first call initializes the counters, subsequent calls
     /// return accurate values.
+    /// 
+    /// # Performance (T325)
+    /// 
+    /// Skips collection of hidden metrics to reduce PDH overhead.
+    /// Set collect_cpu/collect_disk/collect_network to false to skip.
     pub fn collect(&mut self) -> Result<SystemMetrics, String> {
         self.query.collect()?;
         
@@ -244,36 +263,43 @@ impl SystemMetricsCollector {
         
         let mut metrics = SystemMetrics::default();
         
-        // CPU total
-        metrics.cpu_total_percent = self.query.get_value(self.cpu_total_index)
-            .unwrap_or(0.0);
-        
-        // CPU per-core
-        for &index in &self.cpu_per_core_indices {
-            let value = self.query.get_value(index).unwrap_or(0.0);
-            metrics.cpu_per_core_percent.push(value);
+        // T325: Only collect visible metrics
+        if self.collect_cpu {
+            // CPU total
+            metrics.cpu_total_percent = self.query.get_value(self.cpu_total_index)
+                .unwrap_or(0.0);
+            
+            // CPU per-core
+            for &index in &self.cpu_per_core_indices {
+                let value = self.query.get_value(index).unwrap_or(0.0);
+                metrics.cpu_per_core_percent.push(value);
+            }
+            
+            // CPU frequency
+            metrics.cpu_frequency_mhz = self.query.get_value(self.cpu_freq_index)
+                .unwrap_or(0.0);
+            metrics.cpu_base_frequency_mhz = metrics.cpu_frequency_mhz; // Base freq requires separate query
         }
         
-        // CPU frequency
-        metrics.cpu_frequency_mhz = self.query.get_value(self.cpu_freq_index)
-            .unwrap_or(0.0);
-        metrics.cpu_base_frequency_mhz = metrics.cpu_frequency_mhz; // Base freq requires separate query
+        if self.collect_disk {
+            // Disk I/O
+            metrics.disk_read_bps = self.query.get_value(self.disk_read_bps_index)
+                .unwrap_or(0.0);
+            metrics.disk_write_bps = self.query.get_value(self.disk_write_bps_index)
+                .unwrap_or(0.0);
+            metrics.disk_read_iops = self.query.get_value(self.disk_read_iops_index)
+                .unwrap_or(0.0);
+            metrics.disk_write_iops = self.query.get_value(self.disk_write_iops_index)
+                .unwrap_or(0.0);
+        }
         
-        // Disk I/O
-        metrics.disk_read_bps = self.query.get_value(self.disk_read_bps_index)
-            .unwrap_or(0.0);
-        metrics.disk_write_bps = self.query.get_value(self.disk_write_bps_index)
-            .unwrap_or(0.0);
-        metrics.disk_read_iops = self.query.get_value(self.disk_read_iops_index)
-            .unwrap_or(0.0);
-        metrics.disk_write_iops = self.query.get_value(self.disk_write_iops_index)
-            .unwrap_or(0.0);
-        
-        // Network I/O
-        metrics.network_recv_bps = self.query.get_value(self.network_recv_index)
-            .unwrap_or(0.0);
-        metrics.network_send_bps = self.query.get_value(self.network_send_index)
-            .unwrap_or(0.0);
+        if self.collect_network {
+            // Network I/O
+            metrics.network_recv_bps = self.query.get_value(self.network_recv_index)
+                .unwrap_or(0.0);
+            metrics.network_send_bps = self.query.get_value(self.network_send_index)
+                .unwrap_or(0.0);
+        }
         
         Ok(metrics)
     }

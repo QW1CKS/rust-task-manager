@@ -17,13 +17,25 @@ use std::sync::Arc;
 /// - `ptr` remains valid for the duration of this function
 /// - The string data at `ptr` is properly aligned for `u16`
 pub unsafe fn from_wide_ptr(ptr: *const u16) -> String {
+    // T359: Validate pointer preconditions
+    debug_assert!(!ptr.is_null(), "from_wide_ptr called with null pointer");
+    debug_assert_eq!(ptr as usize % 2, 0, "pointer must be 2-byte aligned for u16");
+    
     if ptr.is_null() {
         return String::new();
     }
 
-    // SAFETY: Caller guarantees ptr is valid and null-terminated
+    // SAFETY (T358): String traversal is safe because:
+    // - Caller guarantees ptr is valid and null-terminated
+    // - We iterate until null terminator (0) is found
+    // - from_raw_parts creates slice with computed length
+    // - String::from_utf16_lossy handles invalid UTF-16 gracefully
     unsafe {
         let len = (0..).take_while(|&i| *ptr.add(i) != 0).count();
+        
+        // T359: Validate reasonable string length
+        debug_assert!(len < 32768, "suspiciously long string length {}", len);
+        
         let slice = std::slice::from_raw_parts(ptr, len);
         String::from_utf16_lossy(slice)
     }

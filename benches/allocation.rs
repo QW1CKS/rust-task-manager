@@ -138,7 +138,8 @@ fn bench_mixed_workload(c: &mut Criterion) {
             // Filter (allocates new vec)
             let filtered: Vec<_> = processes.iter().filter(|p| p.2 > 250.0).collect();
 
-            black_box((processes, filtered));
+            black_box(&processes);
+            black_box(filtered);
         });
     });
 }

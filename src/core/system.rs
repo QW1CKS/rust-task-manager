@@ -1,6 +1,11 @@
 //! Historical data storage using circular buffer
+//! T321: Memory pressure detection and adaptive buffer pruning
 
 use std::time::Instant;
+
+/// Memory pressure threshold (T321)
+#[allow(dead_code)]
+const HIGH_MEMORY_PRESSURE_MB: usize = 100; // Prune buffers if using >100MB
 
 /// Historical data point
 #[derive(Debug, Clone, Copy)]
@@ -175,6 +180,46 @@ impl<T: Copy> CircularBuffer<T> {
     pub fn clear(&mut self) {
         self.head = 0;
         self.count = 0;
+    }
+
+    /// Check if system is under memory pressure (T321 - Adaptive buffer pruning)
+    /// 
+    /// Returns true if D2D resource memory usage exceeds HIGH_MEMORY_PRESSURE_MB threshold.
+    pub fn check_memory_pressure() -> bool {
+        #[cfg(feature = "fluent-ui")]
+        {
+            use crate::ui::d2d::resources::ResourcePool;
+            let memory_mb = ResourcePool::global_memory_usage() / (1024 * 1024);
+            memory_mb > HIGH_MEMORY_PRESSURE_MB
+        }
+        #[cfg(not(feature = "fluent-ui"))]
+        false
+    }
+
+    /// Prune buffer if under memory pressure (T321 - Adaptive buffer pruning)
+    /// 
+    /// Shrinks buffer capacity by 50% if memory pressure detected, but maintains at least
+    /// HISTORY_1_MIN (60 samples) to preserve minimum functionality.
+    pub fn prune_if_needed(&mut self) {
+        if Self::check_memory_pressure() && self.buffer.capacity() > HISTORY_1_MIN {
+            let new_capacity = (self.buffer.capacity() / 2).max(HISTORY_1_MIN);
+            
+            // Keep the most recent samples
+            let to_keep = new_capacity.min(self.count);
+            let mut new_buffer = Vec::with_capacity(new_capacity);
+            
+            if to_keep > 0 {
+                for point in self.get_all().iter().rev().take(to_keep).rev() {
+                    new_buffer.push(*point);
+                }
+            }
+            
+            self.buffer = new_buffer;
+            self.head = to_keep;
+            self.count = to_keep;
+            
+            eprintln!("Memory pressure detected: pruned buffer to {} capacity", new_capacity);
+        }
     }
 }
 

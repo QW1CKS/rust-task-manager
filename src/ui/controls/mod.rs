@@ -6,6 +6,7 @@ pub mod filter_box;
 pub mod graph;
 pub mod heatmap;
 pub mod table;
+pub mod tabview;
 pub mod time_range_selector;
 
 use crate::ui::input::{MouseEvent, KeyboardEvent};

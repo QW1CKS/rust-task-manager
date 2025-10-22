@@ -162,11 +162,11 @@ pub enum HitTestResult {
     GraphArea,
 }
 
-/// Focus management for keyboard navigation
+/// Focus manager for keyboard navigation (T405)
 pub struct FocusManager {
     focused_element: Option<u32>,
     focusable_elements: Vec<u32>,
-    current_index: usize,
+    current_index: Option<usize>,
 }
 
 impl FocusManager {
@@ -174,7 +174,7 @@ impl FocusManager {
         Self {
             focused_element: None,
             focusable_elements: Vec::new(),
-            current_index: 0,
+            current_index: None,
         }
     }
 
@@ -191,8 +191,13 @@ impl FocusManager {
             return None;
         }
 
-        self.current_index = (self.current_index + 1) % self.focusable_elements.len();
-        self.focused_element = Some(self.focusable_elements[self.current_index]);
+        let next_index = match self.current_index {
+            None => 0,
+            Some(idx) => (idx + 1) % self.focusable_elements.len(),
+        };
+        
+        self.current_index = Some(next_index);
+        self.focused_element = Some(self.focusable_elements[next_index]);
         self.focused_element
     }
 
@@ -202,24 +207,15 @@ impl FocusManager {
             return None;
         }
 
-        if self.current_index == 0 {
-            self.current_index = self.focusable_elements.len() - 1;
-        } else {
-            self.current_index -= 1;
-        }
-        self.focused_element = Some(self.focusable_elements[self.current_index]);
+        let prev_index = match self.current_index {
+            None => self.focusable_elements.len() - 1,
+            Some(0) => self.focusable_elements.len() - 1,
+            Some(idx) => idx - 1,
+        };
+        
+        self.current_index = Some(prev_index);
+        self.focused_element = Some(self.focusable_elements[prev_index]);
         self.focused_element
-    }
-
-    /// Set focus to specific element
-    pub fn set_focus(&mut self, id: u32) -> bool {
-        if let Some(index) = self.focusable_elements.iter().position(|&x| x == id) {
-            self.current_index = index;
-            self.focused_element = Some(id);
-            true
-        } else {
-            false
-        }
     }
 
     /// Get currently focused element
@@ -236,5 +232,140 @@ impl FocusManager {
 impl Default for FocusManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Keyboard shortcut definition (T408)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Shortcut {
+    /// Ctrl+F - Open filter box
+    Find,
+    /// Delete - End selected process
+    Delete,
+    /// F5 - Refresh data
+    Refresh,
+    /// Ctrl+Tab - Switch to next tab
+    NextTab,
+    /// Ctrl+Shift+Tab - Switch to previous tab
+    PreviousTab,
+    /// Escape - Close dialog/cancel operation
+    Escape,
+    /// Enter - Activate focused element
+    Enter,
+    /// Ctrl+1 through Ctrl+6 - Switch to specific tab
+    SwitchToTab(u8),
+}
+
+impl Shortcut {
+    /// Try to parse a keyboard event into a shortcut
+    pub fn from_keyboard_event(event: &KeyboardEvent) -> Option<Self> {
+        use windows::Win32::UI::Input::KeyboardAndMouse::*;
+        
+        match event {
+            KeyboardEvent::KeyDown { vkey, modifiers, .. } => {
+                let vkey = *vkey;
+                
+                // Escape key
+                if vkey == VK_ESCAPE.0 {
+                    return Some(Shortcut::Escape);
+                }
+                
+                // Enter key
+                if vkey == VK_RETURN.0 {
+                    return Some(Shortcut::Enter);
+                }
+                
+                // Delete key
+                if vkey == VK_DELETE.0 {
+                    return Some(Shortcut::Delete);
+                }
+                
+                // F5 key (refresh)
+                if vkey == VK_F5.0 {
+                    return Some(Shortcut::Refresh);
+                }
+                
+                // Ctrl+F (find)
+                if vkey == 'F' as u16 && modifiers.ctrl && !modifiers.shift {
+                    return Some(Shortcut::Find);
+                }
+                
+                // Ctrl+Tab (next tab)
+                if vkey == VK_TAB.0 && modifiers.ctrl && !modifiers.shift {
+                    return Some(Shortcut::NextTab);
+                }
+                
+                // Ctrl+Shift+Tab (previous tab)
+                if vkey == VK_TAB.0 && modifiers.ctrl && modifiers.shift {
+                    return Some(Shortcut::PreviousTab);
+                }
+                
+                // Ctrl+1 through Ctrl+6 (switch to specific tab)
+                if modifiers.ctrl && !modifiers.shift {
+                    if vkey >= '1' as u16 && vkey <= '6' as u16 {
+                        let tab_index = (vkey - '1' as u16) as u8;
+                        return Some(Shortcut::SwitchToTab(tab_index));
+                    }
+                }
+                
+                None
+            }
+            _ => None,
+        }
+    }
+    
+    /// Get human-readable shortcut string
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            Shortcut::Find => "Ctrl+F",
+            Shortcut::Delete => "Delete",
+            Shortcut::Refresh => "F5",
+            Shortcut::NextTab => "Ctrl+Tab",
+            Shortcut::PreviousTab => "Ctrl+Shift+Tab",
+            Shortcut::Escape => "Escape",
+            Shortcut::Enter => "Enter",
+            Shortcut::SwitchToTab(n) => match n {
+                0 => "Ctrl+1",
+                1 => "Ctrl+2",
+                2 => "Ctrl+3",
+                3 => "Ctrl+4",
+                4 => "Ctrl+5",
+                5 => "Ctrl+6",
+                _ => "Unknown",
+            },
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_focus_manager() {
+        let mut focus = FocusManager::new();
+        focus.register(1);
+        focus.register(2);
+        focus.register(3);
+        
+        // First call to focus_next goes to index 0 (element 1)
+        assert_eq!(focus.focus_next(), Some(1));
+        // Second call goes to index 1 (element 2)
+        assert_eq!(focus.focus_next(), Some(2));
+        // focus_previous goes back to index 0 (element 1)
+        assert_eq!(focus.focus_previous(), Some(1));
+        // Verify we can cycle through all elements
+        assert_eq!(focus.focus_next(), Some(2));
+        assert_eq!(focus.focus_next(), Some(3));
+        // Wraps around to element 1
+        assert_eq!(focus.focus_next(), Some(1));
+    }
+
+    #[test]
+    fn test_shortcut_strings() {
+        assert_eq!(Shortcut::Find.to_string(), "Ctrl+F");
+        assert_eq!(Shortcut::Delete.to_string(), "Delete");
+        assert_eq!(Shortcut::Refresh.to_string(), "F5");
+        assert_eq!(Shortcut::SwitchToTab(0).to_string(), "Ctrl+1");
     }
 }

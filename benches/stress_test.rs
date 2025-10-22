@@ -4,43 +4,29 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::Duration;
-use task_manager::core::process::{ProcessInfo, ProcessStore};
-use task_manager::core::system::SystemMonitor;
+use task_manager::core::filter::ProcessInfo;
 
 fn generate_mock_processes(count: usize) -> Vec<ProcessInfo> {
     (0..count)
         .map(|i| ProcessInfo {
             pid: i as u32,
+            parent_pid: 0,
             name: format!("process_{}.exe", i % 100), // 100 unique names
-            cpu_usage: (i % 100) as f32,
-            memory_bytes: (i * 1024 * 1024) as u64,
-            thread_count: (i % 16 + 1) as u32,
+            cpu_usage: (i % 100) as f64,
+            memory_private: (i * 1024 * 1024) as u64,
+            memory_working_set: (i * 1024 * 1024) as u64,
+            io_read_bytes: 0,
+            io_write_bytes: 0,
             handle_count: (i % 500 + 100) as u32,
-            priority: 8,
-            status: task_manager::core::process::ProcessStatus::Running,
         })
         .collect()
 }
 
-fn bench_process_store_with_load(c: &mut Criterion) {
+fn bench_process_enumeration(c: &mut Criterion) {
     let mut group = c.benchmark_group("stress_test");
     group.measurement_time(Duration::from_secs(10));
 
     for process_count in [100, 500, 1000, 2000, 5000].iter() {
-        group.bench_with_input(
-            BenchmarkId::new("process_store_update", process_count),
-            process_count,
-            |b, &count| {
-                let mut store = ProcessStore::new();
-                let processes = generate_mock_processes(count);
-
-                b.iter(|| {
-                    store.update(&processes);
-                    black_box(&store);
-                });
-            },
-        );
-
         group.bench_with_input(
             BenchmarkId::new("process_enumeration", process_count),
             process_count,
@@ -50,7 +36,7 @@ fn bench_process_store_with_load(c: &mut Criterion) {
                 b.iter(|| {
                     let filtered: Vec<_> = processes
                         .iter()
-                        .filter(|p| p.cpu_usage > 10.0)
+                        .filter(|p| p.memory_private > 500 * 1024 * 1024)
                         .collect();
                     black_box(filtered);
                 });
@@ -89,7 +75,7 @@ fn bench_sorting_large_process_list(c: &mut Criterion) {
                 let mut processes = generate_mock_processes(count);
 
                 b.iter(|| {
-                    processes.sort_by(|a, b| b.memory_bytes.cmp(&a.memory_bytes));
+                    processes.sort_by(|a, b| b.memory_private.cmp(&a.memory_private));
                     black_box(&processes);
                 });
             },
@@ -127,7 +113,7 @@ fn bench_filtering_performance(c: &mut Criterion) {
         b.iter(|| {
             let filtered: Vec<_> = processes
                 .iter()
-                .filter(|p| p.memory_bytes > 500 * 1024 * 1024)
+                .filter(|p| p.memory_private > 500 * 1024 * 1024)
                 .collect();
             black_box(filtered);
         });
@@ -159,7 +145,7 @@ fn bench_memory_footprint(c: &mut Criterion) {
 
 criterion_group!(
     benches,
-    bench_process_store_with_load,
+    bench_process_enumeration,
     bench_sorting_large_process_list,
     bench_filtering_performance,
     bench_memory_footprint,
