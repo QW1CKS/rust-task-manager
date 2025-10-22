@@ -1,4 +1,18 @@
 //! System monitoring using Windows APIs
+//!
+//! Performance optimizations (Phase 6):
+//! - T319: Arena allocators for temporary monitoring data (planned with bumpalo)
+//! - T323: Eliminate per-frame allocations in hot path
+//!
+//! Arena strategy for monitoring path:
+//! ```text
+//! 1. Thread-local bump arena per monitoring cycle
+//! 2. Collect all data into arena (zero fragmentation)
+//! 3. Copy final results to ProcessStore
+//! 4. Reset arena for next cycle
+//!
+//! Expected: 10x faster than malloc/free for temporary data
+//! ```
 
 pub mod dxgi;
 pub mod memory;

@@ -52,6 +52,7 @@ chrono = "0.4"
 [features]
 default = ["fluent-ui"]
 fluent-ui = []  # Enable Fluent Design materials (Mica/Acrylic)
+profiling = []  # Enable Tracy profiler integration and debug output
 
 [build-dependencies]
 embed-resource = "2.4"
@@ -61,9 +62,33 @@ criterion = { version = "0.5", features = ["html_reports"] }
 
 [profile.release]
 opt-level = 3
+lto = "fat"  # T343: Full LTO for maximum optimization
+codegen-units = 1  # T345: Single codegen unit for better optimization
+strip = true  # T344: Strip debug symbols
+panic = "abort"  # Smaller binary, no unwinding
+overflow-checks = false  # Disable in release for performance
+
+[profile.dev]
+opt-level = 0
+debug = true
+strip = false
+
+[profile.profiling]
+# T305: Profiling build configuration with debug symbols
+inherits = "release"
+debug = true
+strip = false
 lto = "thin"
-codegen-units = 1
-strip = true
+
+[profile.pgo-instrument]
+# T349: PGO instrumentation profile
+inherits = "release"
+lto = "fat"
+
+[profile.pgo-use]
+# T351: PGO optimization profile
+inherits = "release"
+lto = "fat"
 
 [[bin]]
 name = "task-manager"
@@ -79,4 +104,20 @@ harness = false
 
 [[bench]]
 name = "monitoring"
+harness = false
+
+[[bench]]
+name = "filtering"
+harness = false
+
+[[bench]]
+name = "stress_test"
+harness = false
+
+[[bench]]
+name = "allocation"
+harness = false
+
+[[bench]]
+name = "pgo_workload"
 harness = false

@@ -1,4 +1,10 @@
 //! Direct2D renderer with hardware acceleration
+//!
+//! Performance optimizations (Phase 6):
+//! - T333: Event-driven rendering with dirty flag tracking
+//! - T334: ID2D1CommandList caching for static UI elements
+//! - T335: Draw call batching to reduce overhead
+//! - T336: Layer caching for expensive effects
 
 use windows::core::{Interface, Result};
 use windows::Win32::Foundation::{HMODULE, HWND};
@@ -10,7 +16,7 @@ use windows::Win32::Graphics::DirectWrite::*;
 use windows::Win32::Graphics::Dxgi::Common::*;
 use windows::Win32::Graphics::Dxgi::*;
 
-/// Direct2D renderer
+/// Direct2D renderer with event-driven rendering
 pub struct Renderer {
     // D2D Factory
     #[allow(dead_code)]
@@ -48,6 +54,14 @@ pub struct Renderer {
     // Window dimensions
     width: u32,
     height: u32,
+
+    // T333: Event-driven rendering - dirty tracking
+    dirty: bool,
+    last_frame_time: std::time::Instant,
+
+    // T334: Command list for static UI caching
+    static_ui_cache: Option<ID2D1CommandList>,
+    cache_valid: bool,
 }
 
 impl Renderer {
@@ -160,6 +174,10 @@ impl Renderer {
             hwnd,
             width,
             height,
+            dirty: true, // Start dirty to force initial render
+            last_frame_time: std::time::Instant::now(),
+            static_ui_cache: None, // T334: Lazy create on first static UI draw
+            cache_valid: false,
         })
     }
 
@@ -195,6 +213,9 @@ impl Renderer {
 
         self.width = width;
         self.height = height;
+
+        // T336: Invalidate caches on resize
+        self.invalidate_static_cache();
 
         // Release render target
         unsafe {
@@ -244,5 +265,147 @@ impl Renderer {
     /// Get dimensions
     pub fn dimensions(&self) -> (u32, u32) {
         (self.width, self.height)
+    }
+
+    /// T333: Mark renderer as needing update (dirty)
+    pub fn invalidate(&mut self) {
+        self.dirty = true;
+    }
+
+    /// T333: Check if rendering is needed (throttled to 120 FPS)
+    pub fn should_render(&mut self) -> bool {
+        const TARGET_FRAME_TIME: std::time::Duration = std::time::Duration::from_micros(8333); // 120 FPS
+        
+        if !self.dirty {
+            return false;
+        }
+
+        let now = std::time::Instant::now();
+        let elapsed = now.duration_since(self.last_frame_time);
+        
+        if elapsed >= TARGET_FRAME_TIME {
+            self.last_frame_time = now;
+            self.dirty = false;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// T334: Create command list for static UI caching
+    pub fn create_static_ui_cache(&mut self) -> Result<()> {
+        unsafe {
+            let command_list = self.device_context.CreateCommandList()?;
+            self.static_ui_cache = Some(command_list);
+            self.cache_valid = false;
+        }
+        Ok(())
+    }
+
+    /// T334: Begin recording static UI into command list
+    pub fn begin_static_ui_recording(&mut self) -> Result<()> {
+        if self.static_ui_cache.is_none() {
+            self.create_static_ui_cache()?;
+        }
+
+        if let Some(ref command_list) = self.static_ui_cache {
+            unsafe {
+                self.device_context.SetTarget(command_list);
+            }
+        }
+        Ok(())
+    }
+
+    /// T334: End recording and mark cache as valid
+    pub fn end_static_ui_recording(&mut self) -> Result<()> {
+        if let Some(ref command_list) = self.static_ui_cache {
+            unsafe {
+                command_list.Close()?;
+            }
+            self.cache_valid = true;
+
+            // Reset target to bitmap
+            unsafe {
+                self.device_context.SetTarget(&self.bitmap);
+            }
+        }
+        Ok(())
+    }
+
+    /// T334: Draw cached static UI (much faster than re-rendering)
+    pub fn draw_static_ui_cache(&self) {
+        if self.cache_valid {
+            if let Some(ref command_list) = self.static_ui_cache {
+                unsafe {
+                    self.device_context.DrawImage(
+                        command_list,
+                        None,
+                        None,
+                        D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+                        D2D1_COMPOSITE_MODE_SOURCE_OVER,
+                    );
+                }
+            }
+        }
+    }
+
+    /// T334: Invalidate static UI cache (call when layout changes)
+    pub fn invalidate_static_cache(&mut self) {
+        self.cache_valid = false;
+        self.dirty = true;
+    }
+
+    /// T335: Batch multiple rectangles into single geometry (reduce draw calls)
+    pub fn draw_rectangles_batched(&self, rects: &[D2D_RECT_F], brush: &ID2D1Brush) -> Result<()> {
+        // For small batches, individual calls are fine
+        if rects.len() <= 3 {
+            for rect in rects {
+                unsafe {
+                    self.device_context.FillRectangle(rect, brush);
+                }
+            }
+            return Ok(());
+        }
+
+        // For larger batches, use geometry group for single draw call
+        unsafe {
+            let mut geometries: Vec<Option<ID2D1Geometry>> = Vec::with_capacity(rects.len());
+            
+            for rect in rects {
+                let rect_geom = self.d2d_factory.CreateRectangleGeometry(rect)?;
+                geometries.push(Some(rect_geom.cast()?));
+            }
+
+            let geometry_group = self.d2d_factory.CreateGeometryGroup(
+                D2D1_FILL_MODE_WINDING,
+                &geometries,
+            )?;
+
+            self.device_context.FillGeometry(&geometry_group, brush, None);
+        }
+
+        Ok(())
+    }
+
+    /// T336: Create and cache a layer for expensive effects (shadows, blurs)
+    pub fn create_cached_layer(&self, width: f32, height: f32) -> Result<ID2D1Layer> {
+        unsafe {
+            let size = D2D_SIZE_F { width, height };
+            self.device_context.CreateLayer(Some(&size))
+        }
+    }
+
+    /// T336: Push layer with caching (reuse across frames)
+    pub fn push_layer(&self, layer: &ID2D1Layer, params: &D2D1_LAYER_PARAMETERS1) {
+        unsafe {
+            self.device_context.PushLayer(params as *const _, layer);
+        }
+    }
+
+    /// T336: Pop layer
+    pub fn pop_layer(&self) {
+        unsafe {
+            self.device_context.PopLayer();
+        }
     }
 }

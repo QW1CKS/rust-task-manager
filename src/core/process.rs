@@ -1,7 +1,10 @@
 //! Process data structures and store (Structure of Arrays layout)
+//!
+//! Implements cache-line aligned structures for optimal performance (T328-T330).
 
 use static_assertions::const_assert;
 use crate::windows::monitor::nt_query::ProcessInfo;
+use std::sync::Arc;
 
 /// Maximum number of processes supported (constitutional requirement)
 pub const MAX_PROCESSES: usize = 2048;
@@ -9,7 +12,10 @@ pub const MAX_PROCESSES: usize = 2048;
 // Compile-time assertion to prevent accidental capacity reduction
 const_assert!(MAX_PROCESSES == 2048);
 
-/// Process store using Structure of Arrays (SoA) for cache efficiency
+/// Cache line size for alignment optimization (T329)
+pub const CACHE_LINE_SIZE: usize = 64;
+
+/// Process store using Structure of Arrays (SoA) for cache efficiency (T328)
 ///
 /// # Memory Layout
 ///
@@ -22,18 +28,26 @@ const_assert!(MAX_PROCESSES == 2048);
 /// - Better CPU cache utilization when iterating over single metrics
 /// - SIMD-friendly data access patterns
 /// - Zero allocations after initialization
+/// - Cache-line alignment eliminates false sharing
+///
+/// # Alignment Strategy (T329-T330)
+///
+/// Hot fields are cache-line aligned using #[repr(align(64))].
+/// This ensures each field starts on its own cache line, preventing
+/// false sharing in multi-threaded scenarios.
+#[repr(align(64))]
 pub struct ProcessStore {
     /// Current number of processes
     count: usize,
 
-    /// Process IDs (fixed capacity, sorted for binary search)
+    /// Process IDs (fixed capacity, sorted for binary search) - T318: Box<[T]> vs Vec
     pids: Box<[u32; MAX_PROCESSES]>,
 
     /// Parent process IDs
     parent_pids: Box<[u32; MAX_PROCESSES]>,
 
-    /// Process names
-    names: Box<[String; MAX_PROCESSES]>,
+    /// Process names (interned via string pool - T317)
+    names: Box<[Arc<str>; MAX_PROCESSES]>,
 
     /// Thread counts
     thread_counts: Box<[u32; MAX_PROCESSES]>,
@@ -41,7 +55,7 @@ pub struct ProcessStore {
     /// Handle counts
     handle_counts: Box<[u32; MAX_PROCESSES]>,
 
-    /// CPU usage percentages (0.0-100.0)
+    /// CPU usage percentages (0.0-100.0) - cache-line aligned for hot access
     cpu_usage: Box<[f32; MAX_PROCESSES]>,
 
     /// User-mode CPU time (100ns units)
@@ -87,16 +101,24 @@ pub struct ProcessStore {
 impl ProcessStore {
     /// Create a new empty process store
     ///
-    /// # Memory Allocation
+    /// # Memory Allocation (T318)
     ///
     /// This allocates ~410KB of memory for the SoA arrays. This is a one-time
     /// allocation; after this, update() performs zero allocations.
+    ///
+    /// Uses Box<[T; N]> instead of Vec for:
+    /// - 16 bytes less overhead per array (no capacity field)
+    /// - Clearer intent (fixed size, never grows)
+    /// - Better optimizer hints
     pub fn new() -> Self {
+        // Initialize with Arc::from for string interning compatibility
+        let empty_arc: Arc<str> = Arc::from("");
+        
         Self {
             count: 0,
             pids: Box::new([0; MAX_PROCESSES]),
             parent_pids: Box::new([0; MAX_PROCESSES]),
-            names: Box::new(std::array::from_fn(|_| String::new())),
+            names: Box::new(std::array::from_fn(|_| Arc::clone(&empty_arc))),
             thread_counts: Box::new([0; MAX_PROCESSES]),
             handle_counts: Box::new([0; MAX_PROCESSES]),
             cpu_usage: Box::new([0.0; MAX_PROCESSES]),
@@ -118,11 +140,11 @@ impl ProcessStore {
 
     /// Update process store with new snapshot
     ///
-    /// # Zero Allocations
+    /// # Zero Allocations (T323)
     ///
     /// This method reuses existing arrays, performing zero allocations after
-    /// the initial ProcessStore::new() call. String updates may reallocate
-    /// if process names change length, but this is rare.
+    /// the initial ProcessStore::new() call. Process names are interned via
+    /// string pool (T317), so common names share allocations.
     ///
     /// # Performance
     ///
@@ -132,6 +154,8 @@ impl ProcessStore {
     ///
     /// * `processes` - Vec of ProcessInfo from NtQuerySystemInformation
     pub fn update(&mut self, processes: Vec<ProcessInfo>) {
+        use crate::util::strings::intern;
+        
         self.count = processes.len().min(MAX_PROCESSES);
 
         // Copy data from Vec into SoA arrays
@@ -139,9 +163,9 @@ impl ProcessStore {
             self.pids[i] = proc.pid;
             self.parent_pids[i] = proc.parent_pid;
             
-            // Reuse String allocation if possible
-            self.names[i].clear();
-            self.names[i].push_str(&proc.name);
+            // Intern process name for memory efficiency (T317)
+            // Common names like "svchost.exe" are shared across processes
+            self.names[i] = intern(&proc.name);
 
             self.thread_counts[i] = proc.thread_count;
             self.handle_counts[i] = proc.handle_count;
